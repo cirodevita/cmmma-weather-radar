@@ -30,7 +30,7 @@ Make sure you are inside the virtual enviroment and all the dependencies has bee
 
 Run the script 
 ```console
-(venv) $ python3 radar_step_NA.py
+$ python3 radar_step_NA.py
 ```
 
 After the data has been processed the output will be saved in the "output" directory.
