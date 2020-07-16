@@ -1,0 +1,142 @@
+<?xml version="1.0"?>
+<Eldes>
+   <Version CfgVersion="4.0.0 SR15" />
+   <General DebugVideo="YES" DebugFile="YES" ShowWnd="YES" MatlabLogFile="YES" SigProcDet="YES" AdvancedWork="0">
+      <Layout FrmSize="1308;644" FrmState="0" SplitScan="511" SplitReg="430" />
+   </General>
+   <Ranges>
+      <Range Name="21.6 Km" Value="21.6">
+         <RangeSteps>
+            <RangeStep Name="90 m" Value="90" />
+            <RangeStep Name="150 m" Value="150" />
+            <RangeStep Name="300 m" Value="300" />
+            <RangeStep Name="450 m" Value="450" />
+         </RangeSteps>
+      </Range>
+      <Range Name="36 Km" Value="36">
+         <RangeSteps>
+            <RangeStep Name="150 m" Value="150" />
+            <RangeStep Name="300 m" Value="300" />
+            <RangeStep Name="450 m" Value="450" />
+         </RangeSteps>
+      </Range>
+      <Range Name="72 Km" Value="72">
+         <RangeSteps>
+            <RangeStep Name="300 m" Value="300" />
+            <RangeStep Name="450 m" Value="450" />
+         </RangeSteps>
+      </Range>
+      <Range Name="108 Km" Value="108">
+         <RangeSteps>
+            <RangeStep Name="450 m" Value="450" />
+         </RangeSteps>
+      </Range>
+   </Ranges>
+   <Radar>
+      <Default_Radar RadarID="0" RadarNetwork="A">
+         <RadarCMD COMPort="1" BaudRate="9600" DataBit="8" StopBit="1" Parity="O" />
+         <SignalProc OffsetAzimuth422="357.5" OffsetElevation422="4" KRadar="-20" NoiseLevel422="37.48" LogThrMode="1" LogThr="1.4" PulseNumber="1200" NoiseCalcSeq="0" TuneIndThr="100" NoiseFilter422="YES" ReceiverSlope="149.21" MDS="-120.49" TrasPow="9.64" AntGain="34" ThetaAZ="3" ThetaEL="3.3" PulseWidth="1" PrfShort="1600" PrfMedium="800" PrfLong="500" TPulseShort="0.292" TPulseMedium="0.668" TPulseLong="1.19" MFLossShort="1.2" MFLossMedium="1.3" MFLossLong="0.7" TrasFreq="9419.3" RadAtt="0.5" RefConst="0" KRadarCalc="YES" GateOffset="3" />
+         <Scan>
+            <Scan_1 NumFramesCalib="3" ModePPI="YES" ModeRHI="NO" ModoAcqTest="0" DisableRad="NO" StopRad="NO" Tune="1" TuneDirectionEnabled="NO" TuneDirection="230" TuneAuto="NO" JitterEnabled="YES" JitterThreshold="30" SaveRawData="NO" SaveRawDataTxt="NO" SogliaSigmaMin="8.3" SogliaSigmaMax="8.5" RecWinDim="0" ClutterFilterRS422="YES" ClutterMap="YES" ClutterMapUpdate="NO" SogliaSigmaMinRHI="0" SogliaSigmaMaxRHI="0" RecWinDimRHI="0" ClutterFilterRS422RHI="NO" PathDataFile="" SendFile="YES" UseRAS="NO" RASEntry="" DiscRAS="NO" Server="192.168.243.14" UserName="anonymous" Password="474e464755" FTPFolder="WR10X" ElStep1="YES" ElStep1Value="1" ElStep2="YES" ElStep2Value="2" ElStep3="YES" ElStep3Value="3" ElStep4="YES" ElStep4Value="4" ElStep5="YES" ElStep5Value="5" ElStep6="YES" ElStep6Value="7.5" ElStep7="YES" ElStep7Value="10" ElStep8="YES" ElStep8Value="12.5" ElStep9="YES" ElStep9Value="15" ElStep10="YES" ElStep10Value="20" AziVel="20" AziStep1="YES" AziStep1Value="0" AziStep2="NO" AziStep2Value="0" AziStep3="NO" AziStep3Value="0" AziStep4="NO" AziStep4Value="0" AziStep5="NO" AziStep5Value="0" AziStep6="NO" AziStep6Value="0" AziStep7="NO" AziStep7Value="0" AziStep8="NO" AziStep8Value="0" AziStep9="NO" AziStep9Value="0" AziStep10="NO" AziStep10Value="0" EleStart="0" EleStop="20" AutoRHI="NO" AutoRHIMode="0" Range="108" RangeStep="450" AzResPPI="1" AzResRHI="3" BBD="YES" EnableSB1="NO" SB1Start="0" SB1Stop="0" SB1MaxEl="180" EnableSB2="NO" SB2Start="0" SB2Stop="0" SB2MaxEl="180">
+               <FilterSettings>
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="21.6 Km" StnRangeStep="90 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="21.6 Km" StnRangeStep="150 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="21.6 Km" StnRangeStep="300 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="21.6 Km" StnRangeStep="450 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="36 Km" StnRangeStep="150 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="36 Km" StnRangeStep="300 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="36 Km" StnRangeStep="450 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="72 Km" StnRangeStep="300 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="72 Km" StnRangeStep="450 m" />
+                  <FltStng DecThreshold="93" HeightThreshold="180" StnRange="108 Km" StnRangeStep="450 m" />
+               </FilterSettings>
+               <FilterSettingsRHI>
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="21.6 Km" StnRangeStep="90 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="21.6 Km" StnRangeStep="150 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="21.6 Km" StnRangeStep="300 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="21.6 Km" StnRangeStep="450 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="36 Km" StnRangeStep="150 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="36 Km" StnRangeStep="300 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="36 Km" StnRangeStep="450 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="72 Km" StnRangeStep="300 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="72 Km" StnRangeStep="450 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="108 Km" StnRangeStep="450 m" />
+               </FilterSettingsRHI>
+               <GeneralDP DebugVideo="YES" DebugFile="NO" ShowWnd="NO" ShowProdDet="NO" TimeRef="0" />
+               <Products>
+                  <Prod Name="RHI" NameExt="Range Height Indicator" Value="False" Cfg="" CfgDefault="" Level="1" />
+                  <Prod Name="PPI" NameExt="Plan Position Indicator" Value="False" Cfg="" CfgDefault="" Level="1" />
+                  <Prod Name="VMI" NameExt="Vertical Maximum Indicator" Value="True" Cfg="*?xml version=|1.0|?+&#xA;*!-- Written on 26-Feb-2020 13:59:12 using the XML Toolbox for Matlab --+&#xA;*root+&#xA;  *Cfg+&#xA;    *ATTRIBUTE+&#xA;      *gif_file+1*$gif_file+&#xA;      *tiff_file+0*$tiff_file+&#xA;      *bmp_file+0*$bmp_file+&#xA;      *png_file+0*$png_file+&#xA;      *jpeg_file+0*$jpeg_file+&#xA;      *file_txt+0*$file_txt+&#xA;      *median_filter+0*$median_filter+&#xA;      *median_filter_size+1*$median_filter_size+&#xA;      *LOG_file+1*$LOG_file+&#xA;      *size_image+1*$size_image+&#xA;      *fig_mode+2*$fig_mode+&#xA;      *RemoveElevations_checkbox+0*$RemoveElevations_checkbox+&#xA;      *RemoveElevations_value+-2*$RemoveElevations_value+&#xA;    *$ATTRIBUTE+&#xA;  *$Cfg+&#xA;*$root+&#xA;" CfgDefault="" Level="1" />
+                  <Prod Name="HVM" NameExt="Horizontal Vertical Maximum Indicator" Value="False" Cfg="" CfgDefault="" Level="1" />
+                  <Prod Name="NOW" NameExt="Nowcasting" Value="False" Cfg="" CfgDefault="" Level="1" />
+               </Products>
+            </Scan_1>
+            <Scan_0 NumFramesCalib="3" ModePPI="YES" ModeRHI="NO" ModoAcqTest="0" DisableRad="YES" StopRad="NO" Tune="0" TuneDirectionEnabled="NO" TuneDirection="0" TuneAuto="NO" JitterEnabled="NO" JitterThreshold="0" SaveRawData="NO" SaveRawDataTxt="NO" SogliaSigmaMin="0" SogliaSigmaMax="0" RecWinDim="0" ClutterFilterRS422="NO" ClutterMap="NO" ClutterMapUpdate="NO" SogliaSigmaMinRHI="0" SogliaSigmaMaxRHI="0" RecWinDimRHI="0" ClutterFilterRS422RHI="NO" PathDataFile="" SendFile="NO" UseRAS="NO" RASEntry="" DiscRAS="YES" Server="" UserName="" Password="" FTPFolder="" ElStep1="YES" ElStep1Value="0" ElStep2="NO" ElStep2Value="0" ElStep3="NO" ElStep3Value="0" ElStep4="NO" ElStep4Value="0" ElStep5="NO" ElStep5Value="0" ElStep6="NO" ElStep6Value="0" ElStep7="NO" ElStep7Value="0" ElStep8="NO" ElStep8Value="0" ElStep9="NO" ElStep9Value="0" ElStep10="NO" ElStep10Value="0" AziVel="20" AziStep1="YES" AziStep1Value="0" AziStep2="NO" AziStep2Value="0" AziStep3="NO" AziStep3Value="0" AziStep4="NO" AziStep4Value="0" AziStep5="NO" AziStep5Value="0" AziStep6="NO" AziStep6Value="0" AziStep7="NO" AziStep7Value="0" AziStep8="NO" AziStep8Value="0" AziStep9="NO" AziStep9Value="0" AziStep10="NO" AziStep10Value="0" EleStart="0" EleStop="20" AutoRHI="NO" AutoRHIMode="0" Range="72" RangeStep="300" AzResPPI="3" AzResRHI="3" BBD="YES" EnableSB1="NO" SB1Start="0" SB1Stop="0" SB1MaxEl="180" EnableSB2="NO" SB2Start="0" SB2Stop="0" SB2MaxEl="180">
+               <FilterSettings>
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="21.6 Km" StnRangeStep="90 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="21.6 Km" StnRangeStep="150 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="21.6 Km" StnRangeStep="300 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="21.6 Km" StnRangeStep="450 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="36 Km" StnRangeStep="150 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="36 Km" StnRangeStep="300 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="36 Km" StnRangeStep="450 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="72 Km" StnRangeStep="300 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="72 Km" StnRangeStep="450 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="108 Km" StnRangeStep="450 m" />
+               </FilterSettings>
+               <FilterSettingsRHI>
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="21.6 Km" StnRangeStep="90 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="21.6 Km" StnRangeStep="150 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="21.6 Km" StnRangeStep="300 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="21.6 Km" StnRangeStep="450 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="36 Km" StnRangeStep="150 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="36 Km" StnRangeStep="300 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="36 Km" StnRangeStep="450 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="72 Km" StnRangeStep="300 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="72 Km" StnRangeStep="450 m" />
+                  <FltStng DecThreshold="0" HeightThreshold="180" StnRange="108 Km" StnRangeStep="450 m" />
+               </FilterSettingsRHI>
+               <GeneralDP DebugVideo="YES" DebugFile="NO" ShowWnd="NO" ShowProdDet="NO" TimeRef="0" />
+               <Products>
+                  <Prod Name="RHI" NameExt="Range Height Indicator" Value="False" Cfg="" CfgDefault="" Level="1" />
+                  <Prod Name="PPI" NameExt="Plan Position Indicator" Value="False" Cfg="" CfgDefault="" Level="1" />
+                  <Prod Name="VMI" NameExt="Vertical Maximum Indicator" Value="False" Cfg="" CfgDefault="" Level="1" />
+                  <Prod Name="HVM" NameExt="Horizontal Vertical Maximum Indicator" Value="False" Cfg="" CfgDefault="" Level="1" />
+                  <Prod Name="NOW" NameExt="Nowcasting" Value="False" Cfg="" CfgDefault="" Level="1" />
+               </Products>
+            </Scan_0>
+         </Scan>
+      </Default_Radar>
+   </Radar>
+   <Settings>
+      <Debug Video="YES" File="YES" EndProg="NO" MinEndProg="0" ShowWnd="NO" />
+      <RAS UseRAS="NO" RASEntry="" RASNumTel="" RASUid="" RASPwd="" />
+      <GetData GetMode="FTP" FTPServer="" FTPUid="" FTPPwd="" FTPFolder="" Path="" PathFilter="" TransMode="0" />
+      <FTPBackupDir FTPMaster="1" FTPBackupDir1="0" FTPBackupDir2="0" FTPBackupDir3="0" FTPBackupDir4="0" FTPBackupDir5="0" />
+   </Settings>
+   <Archive DebugVideo="YES" DebugFile="YES" ShowWnd="YES" ArchiveAction="1" Days="10" ArchiveZ="True" ArchiveProd="True" ArchiveScan="True" ArchiveTxtRaw="True" ArchiveRaw="True" ArchiveSecDir="False" PathSecArchive="" PathPrimArchive="C:\Program Files\WR-10X\Archive" DefaultPrimDir="True">
+      <Products>
+         <Prod Name="RHI" NameExt="Range Height Indicator" Value="True" Level="1" />
+         <Prod Name="PPI" NameExt="Plan Position Indicator" Value="True" Level="1" />
+         <Prod Name="VMI" NameExt="Vertical Maximum Indicator" Value="True" Level="1" />
+         <Prod Name="HVM" NameExt="Horizontal Vertical Maximum Indicator" Value="True" Level="1" />
+         <Prod Name="NOW" NameExt="Nowcasting" Value="True" Level="1" />
+      </Products>
+   </Archive>
+   <DerivedProd DebugVideo="YES" DebugFile="NO" ShowWnd="NO" ShowProdDet="NO" TimeRef="0">
+      <Products>
+         <Prod Name="RHI" NameExt="Range Height Indicator" Value="True" Cfg="" CfgDefault="" Level="1" />
+         <Prod Name="PPI" NameExt="Plan Position Indicator" Value="False" Cfg="" CfgDefault="" Level="1" />
+         <Prod Name="VMI" NameExt="Vertical Maximum Indicator" Value="False" Cfg="" CfgDefault="" Level="1" />
+         <Prod Name="HVM" NameExt="Horizontal Vertical Maximum Indicator" Value="False" Cfg="" CfgDefault="" Level="1" />
+         <Prod Name="NOW" NameExt="Nowcasting" Value="False" Cfg="" CfgDefault="" Level="1" />
+      </Products>
+   </DerivedProd>
+   <ExtOBJ>
+      <OBJ Name="RHI" NameExt="Range Height Indicator" Acronym="RHI" Config="RHI_config.xml" Level="1" />
+      <OBJ Name="PPI" NameExt="Plan Position Indicator" Acronym="PPI" Config="PPI_Config.xml" Level="1" />
+      <OBJ Name="VMI" NameExt="Vertical Maximum Indicator" Acronym="VMI" Config="VMI_Config.xml" Level="1" />
+      <OBJ Name="HVM" NameExt="Horizontal Vertical Maximum Indicator" Acronym="HVM" Config="HVM_Config.xml" Level="1" />
+      <OBJ Name="NOW" NameExt="Nowcasting" Acronym="NOW" Config="NOW_Config.xml" Level="1" />
+   </ExtOBJ>
+</Eldes>
