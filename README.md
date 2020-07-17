@@ -33,4 +33,4 @@ Run the script
 $ python3 radar_step_NA.py
 ```
 
-After the data has been processed the output will be saved in the "WR10X" directory.
+After the data has been processed the output will be saved in the "WR10X/radar" directory.
