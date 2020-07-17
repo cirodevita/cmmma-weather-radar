@@ -22,7 +22,7 @@ The script uses the module *mpl_toolkits.basemap*  so its dependencies must be i
 ```console
 $ sudo apt install libgeos-3.5.0
 $ sudo apt install libgeos-dev
-$ sudo pip install https://github.com/matplotlib/basemap/archive/master.zip
+$ pip install https://github.com/matplotlib/basemap/archive/master.zip
 ```
 # Usage
 
