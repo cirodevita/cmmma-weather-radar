@@ -6,6 +6,8 @@ from os import listdir
 from os import path
 import sys
 
+from cab_data_extractor import cab_to_mat
+
 # DA COMMENTARE IN DEBUG
 import warnings
 warnings.filterwarnings("ignore")
@@ -18,76 +20,10 @@ np.set_printoptions(threshold=sys.maxsize)
 
 # Meta informazioni sul radar
 path_data = 'WR10X/radar/data/na/'  # Path dati
-path_output = "output"              # Path dove salverà gli output
-
-list = listdir(path_data)
-
-# Cerco il file .Scan
-name = None
-for file in list:
-    if file.endswith('.Scan'):
-        name=file
-        continue
-
-if name is None:
-    print("[x] Not able to find the \".Scan\" file.")
-    sys.exit()
-
-# Memorizzo dati della scansione
-yyyy = name[4:8]
-mm   = name[8:10]
-dd   = name[10:12]
-hh   = name[12:14]
-mi   = name[14:16]
-date = f"{dd}/{mm}/{yyyy} {hh}:{mi} UTC"
-
-radar_range = 108000
-radar_resolution = 450
-
-data_row = radar_range / radar_resolution
-
-print(f"name: {name}\ndate {date}\nradar range: {radar_range} m\nradar resolution: {radar_resolution} m ")
+path_output = "WR10X/radar/"        # Path dove salverà gli output
 
 
-# Leggo i dati dai file -----------------------------------------------------------------------------------
-raw_radar_data = {} 
-# data type del binario
-dt = np.dtype('uint16')
-
-for file in list:
-    if(file[0:3] == "PPI" and file[-3] == "C"):
-        radar_elevation = file[39:41]
-        file_name = path_data+file
-        raw_radar_data[radar_elevation] = np.fromfile(file_name,dtype=dt)
-
-# Converto i dati da uint16 a uint8
-for radar_elevation in raw_radar_data:
-    raw_radar_data[radar_elevation] = raw_radar_data[radar_elevation].astype('float64')
-
-
-
-# Trasformo vettori in matrici
-# 240 è data_per_row + 23 headers
-for radar_elevation in raw_radar_data:
-    raw_radar_data[radar_elevation] = np.reshape(raw_radar_data[radar_elevation] ,(263, 360), 'F')
-
-
-# Elimino gli header
-radar_data = {}
-for radar_elevation in raw_radar_data:
-    radar_data[radar_elevation] = raw_radar_data[radar_elevation][23:] 
-
-
-'''
-# Come nel script in fortran
-# Pare non sia necessario
-q_Z2level  = 64
-m_Z2level  = 2
-
-for radar_elevation in radar_data:
-    radar_data[radar_elevation] = (radar_data[radar_elevation]-q_Z2level)/m_Z2level
-    radar_data[radar_elevation][(radar_data[radar_elevation] > m_Z2level)] = q_Z2level
-'''
+radar_data = cab_to_mat(path_data)
 
 # ---------------------------------------------------------------------------------------------------------
 
@@ -110,6 +46,7 @@ for radar_elevation in radar_data:
 # Applicazione Statistical Filter -----------------------------------------------
 
 # Converto il dizionario in una lista
+
 data_mappe = []
 for radar_elevation in radar_data:
     data_mappe.append(radar_data[radar_elevation])
@@ -132,6 +69,7 @@ for radar_elevation in radar_data:
 
 # Sea Clutter -------------------------------------------------------------------------
 # Non vedo cambiamenti, però credo sia fatto bene
+
 rd = np.empty([240, 360])
 for i in range(240):
     for j in range(360):
@@ -160,6 +98,7 @@ for i in range(99, 240):
 
 # -------------------------------------------------------------------------------------
 # Lettura file M
+
 m1 = np.loadtxt('WR10X/radar/mc1_na.txt')
 m2 = np.loadtxt('WR10X/radar/mc2_na.txt')
 m3 = np.loadtxt('WR10X/radar/mc3_na.txt')
@@ -318,7 +257,7 @@ plt.figure(1, figsize=(1024 / my_dpi, 1024 / my_dpi), dpi=my_dpi)
 
 Zmask2 = ma.array(rain_rate, mask=np.isnan(rain_rate))
 Zmask = np.transpose(Zmask2)
-
+#Zmask = np.transpose(rain_rate)
 
 #14.2 40.5
 m=Basemap(llcrnrlon=lonmin,llcrnrlat=latmin,urcrnrlon=lonmax,urcrnrlat=latmax,
