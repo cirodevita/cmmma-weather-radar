@@ -26,19 +26,19 @@ path_output = "WR10X/radar/"        # Path dove salverà gli output
 radar_data = cab_to_mat(path_data)
 
 # ---------------------------------------------------------------------------------------------------------
-
-
+'''
 # soglie di riflettività sulle matrici raw (threshold)
 th_reflett = 55
 for radar_elevation in radar_data:
     radar_data[radar_elevation][(radar_data[radar_elevation] > th_reflett)] = th_reflett
 
-
+'''
 # Copio Matrici ---------------------------------------------------------
 
 radar_data_raw = {}
 for radar_elevation in radar_data:
     radar_data_raw[radar_elevation] = np.copy(radar_data[radar_elevation])
+
 
 # -----------------------------------------------------------------------
 
@@ -64,7 +64,6 @@ d_filt1 = StatisticalFilter(Mappe, Etn_Th, Txt_Th, Z_Th)
 index = 0
 for radar_elevation in radar_data:
     radar_data[radar_elevation] = d_filt1[index,:,:]
-
 # -----------------------------------------------------------------------------
 
 # Sea Clutter -------------------------------------------------------------------------
@@ -84,7 +83,6 @@ for j in range(126, 252):
             radar_data['01'][i, j] = radar_data['02'][i, j]
         elif rd[i, j] > 0.0 and radar_data['02'][i, j] < T2:
             radar_data['01'][i, j] = radar_data['02'][i, j]
-
 
 
 
@@ -108,7 +106,7 @@ MC = np.array([m1, m2, m3])
 #-------------------------------------------------------------------------------------
 # Compensazione beam blocking ---------------------------------------------------------
 # Introduce delle piccole differenze, da indagare
-
+'''
 MNC = np.array([radar_data['01'], radar_data['02'], radar_data['03']])
 
 for k in range(3):
@@ -134,9 +132,13 @@ radar_data['01'] = Z_cbb1
 radar_data['02'] = Z_cbb2
 radar_data['03'] = Z_cbb3
 
+'''
+
+
+  
 
 # --------------------------------------------------------------------------------------
-
+'''
 # Attenuazione
 # Introduce piccole modifiche.. che sia dannoso?
 for radar_elevation in radar_data:
@@ -185,7 +187,7 @@ for radar_elevation in radar_data:
     Z_filt[radar_elevation][(Z_filt[radar_elevation] < z_th)] = np.nan
     Z_filt[radar_elevation][:, 359] = Z_filt[radar_elevation][:, 0]
 
-
+'''
 dbz_max = np.empty([240, 360])
 # Calcolo VMI
 for i in range(240):
@@ -193,8 +195,8 @@ for i in range(240):
         # FIXME : Warning - RuntimeWarning: All-NaN axis encountered
         dbz_max[i, j] = np.nanmax(
             [
-                Z_filt['01'][i, j], Z_filt['02'][i, j],Z_filt['03'][i, j], Z_filt['04'][i, j], Z_filt['05'][i, j],
-                Z_filt['07'][i, j], Z_filt['10'][i, j],Z_filt['12'][i, j], Z_filt['15'][i, j], Z_filt['20'][i, j]
+                radar_data['01'][i, j], radar_data['02'][i, j],radar_data['03'][i, j], radar_data['04'][i, j], radar_data['05'][i, j],
+                radar_data['07'][i, j], radar_data['10'][i, j],radar_data['12'][i, j], radar_data['15'][i, j], radar_data['20'][i, j]
             ])
         if dbz_max[i, j] <= 0.0: 
             dbz_max[i, j] = np.nan
@@ -251,7 +253,7 @@ lonmax = np.nanmax(lon) + 0.02
 
 # PLOT DEI DATI
 
-plt.figure(1,(30,20),150) #
+#plt.figure(1,(30,20),150) #
 my_dpi = 102.4
 plt.figure(1, figsize=(1024 / my_dpi, 1024 / my_dpi), dpi=my_dpi)
 
@@ -260,6 +262,7 @@ Zmask = np.transpose(Zmask2)
 #Zmask = np.transpose(rain_rate)
 
 #14.2 40.5
+
 m=Basemap(llcrnrlon=lonmin,llcrnrlat=latmin,urcrnrlon=lonmax,urcrnrlat=latmax,
     resolution='f',projection='tmerc',lon_0=radar_lon,lat_0=radar_lat)
 
@@ -271,10 +274,12 @@ w,z=m(radar_lon,radar_lat)
 m.plot(w, z, 's', color='red', markersize=6)
 
 x108mpNA,y108mpNA=m(x108NA,y108NA)
-
 plt.plot(x108mpNA[0,:],y108mpNA[0,:],color='k')
-m.contourf(x,y,Zmask[:,:],cmap='jet')
 
+#clevs=[0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60]
+#m.contourf(x,y,Zmask,cmap='jet')
+print(Zmask)
+Z=m.pcolor(x,y,Zmask[:,:],cmap='jet') 
 # Salvataggio Output
 #np.savetxt(path.join(path_output,'latNA.out') , lat)
 #np.savetxt(path.join(path_output,'lonNA.out') , lon)
