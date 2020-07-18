@@ -167,15 +167,12 @@ def cacola_vmi (radar_data) :
     Zfilt[:, :] = rain_rate
     rain_rate = np.copy(Zfilt)
 
-    '''
-    rain_rate = dbz_max
-    '''
     rain_rate = np.empty([240, 360])
     for i in range(240):
         for j in range(360):
-            rain_rate[i, j] = ((10 ** (dbz_max[i, j] / 10.0)) / 128.3) ** (1 / 1.67)
+            rain_rate[i, j] = (200*dbz_max[i, j]**(1.6))
     '''
-    return rain_rate
+    return dbz_max
 
 def generate_map_plot(rain_rate):
 
@@ -241,6 +238,7 @@ def generate_map_plot(rain_rate):
     clevs=[0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60]
     m.contourf(x,y,Zmask,clevs,cmap='jet')
     #Z=m.pcolor(x,y,Zmask[:,:],cmap='jet') 
+    #m.contourf(x,y,Zmask,cmap='jet')
 
     np.savetxt(path.join(path_output,'VMI_NA.out'), Zmask)
     plt.savefig(path.join(path_output,'image_alb.png'),transparent=False,bbox_inches='tight')
@@ -265,9 +263,12 @@ if __name__ == '__main__':
     th_reflett = 55
     for radar_elevation in radar_data:
         radar_data[radar_elevation][(radar_data[radar_elevation] > th_reflett)] = th_reflett
+        radar_data[radar_elevation][(radar_data[radar_elevation] < 4)] = np.nan
+
+    
+    # Copio Matrici ---------------------------------------------------------
 
     '''
-    # Copio Matrici ---------------------------------------------------------
 
     '''
     radar_data_raw = {}
@@ -296,16 +297,15 @@ if __name__ == '__main__':
             for radar_elevation in radar_data:
                 radar_data[radar_elevation][i,j] = radar_data_raw[radar_elevation][i,j]
 
-       '''
+    '''
     
-    # radar_data = bean_blocking(radar_data)
+    #radar_data = bean_blocking(radar_data)
     #z_filt = attenuazione(radar_data)
 
 
     z_filt = radar_data
-    rain_rate = cacola_vmi(z_filt)
-    print(np.around(rain_rate))
-
-
-    generate_map_plot(rain_rate)
+    
+    vmi = cacola_vmi(z_filt)
+    
+    generate_map_plot(vmi)
 

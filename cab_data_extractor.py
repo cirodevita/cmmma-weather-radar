@@ -61,14 +61,14 @@ def cab_to_mat(path):
         # Converto i dati in float32
         radar_data[r_el] = radar_data[r_el].astype('float32')
 
-        '''
-        # Vengono fatte queste operazioni nello script Fortran
-        q = 64
-        m = 2
+        
+        #Vengono fatte queste operazioni nello script Fortran
+        #q = 64
+        #m = 2
         #radar_data[r_el] = (radar_data[r_el]-q)/m
         #radar_data[r_el][(radar_data[r_el] > q)] = 64
         #radar_data[r_el] = np.around(radar_data[r_el])
-        '''
+        
         #Elimino gli header in ogni riga
         
         radar_data[r_el] = radar_data[r_el][23:]
