@@ -8,7 +8,7 @@ import sys
 from mpl_toolkits.basemap import Basemap
 
 from StatisticalFilter import StatisticalFilter
-from cab_data_extractor import cab_to_mat
+import scan_data
 
 
 import warnings
@@ -26,7 +26,7 @@ def apply_statistical_filter(radar_data):
     Mappe = np.array(data_mappe)
     Etn_Th = 0.0005
     Txt_Th = 14.0
-    Z_Th = -32.0
+    Z_Th = 0
 
 
     d_filt1 = StatisticalFilter(Mappe, Etn_Th, Txt_Th, Z_Th)
@@ -141,9 +141,10 @@ def attenuazione(radar_data):
 
     return Z_filt
 
-def cacola_vmi (radar_data) :
+def calcola_vmi (radar_data) :
 
     dbz_max = np.empty([240, 360])
+    #Dict to list
     # Calcolo VMI
     for i in range(240):
         for j in range(360):
@@ -250,12 +251,7 @@ if __name__ == '__main__':
     path_data   = 'WR10X/radar/data/na/'  # Path dati
     path_output = "WR10X/radar/"          # Path di output
 
-    radar_data = cab_to_mat(path_data)
-
-    # Z to dbz
-    for r_el in radar_data:
-        radar_data[r_el] = 10 * np.log10(radar_data[r_el])
-
+    radar_data = scan_data.get_radar_data(path_data)
 
     # ---------------------------------------------------------------------------------------------------------
     '''
@@ -265,22 +261,19 @@ if __name__ == '__main__':
         radar_data[radar_elevation][(radar_data[radar_elevation] > th_reflett)] = th_reflett
         radar_data[radar_elevation][(radar_data[radar_elevation] < 4)] = np.nan
 
-    
-    # Copio Matrici ---------------------------------------------------------
-
     '''
+    # Copio Matrici ---------------------------------------------------------
 
     '''
     radar_data_raw = {}
     for radar_elevation in radar_data:
         radar_data_raw[radar_elevation] = np.copy(radar_data[radar_elevation])
 
-
     radar_data = apply_statistical_filter(radar_data)
-
+    
     radar_data = apply_sea_clutter(radar_data)
 
-
+ 
     # Riassegno i valori nelle aree non affette da clutter
     for i in range(99, 240):
         for j in range(42, 120):
@@ -296,16 +289,25 @@ if __name__ == '__main__':
         for j in range(264, 360):
             for radar_elevation in radar_data:
                 radar_data[radar_elevation][i,j] = radar_data_raw[radar_elevation][i,j]
-
     '''
+    
     
     #radar_data = bean_blocking(radar_data)
     #z_filt = attenuazione(radar_data)
 
-
+    
+    
+    # Converto i dati da Z a dbz
+    
+    for r_el in radar_data:
+        radar_data[r_el] = 10 * np.log10(radar_data[r_el])
+        radar_data[r_el][(radar_data[r_el]) < 0 ] = np.nan
+    
     z_filt = radar_data
-    
-    vmi = cacola_vmi(z_filt)
-    
+    vmi = calcola_vmi(z_filt)
+
+    #print(vmi)
+
+
     generate_map_plot(vmi)
 
