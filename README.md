@@ -30,7 +30,5 @@ Make sure you are inside the virtual enviroment and all the dependencies has bee
 
 Run the script 
 ```console
-$ python3 radar_step_NA.py
+$ python3 main.py
 ```
-
-After the data has been processed the output will be saved in the "WR10X/radar" directory.
