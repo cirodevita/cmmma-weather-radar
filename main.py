@@ -1,6 +1,7 @@
 from radar import Radar
 
 import os
+import sys
 import numpy as np
 import numpy.ma as ma
 
@@ -8,10 +9,11 @@ import matplotlib.pyplot as plt
 
 from mpl_toolkits.basemap import Basemap
 
+np.set_printoptions(threshold=sys.maxsize)
+
 
 def plot_map(lat0,lon0,data,path_output):
 
-    ragg_radar = 'xx'
     ndata = 240
     radarLocation = np.array([lat0,lon0]) 
     t = np.array([np.arange(-np.pi, np.pi, 0.001)])
@@ -84,9 +86,10 @@ if __name__ == '__main__':
 
     path_output = "WR10X/radar"
     R = Radar(lat0,lon1,path)
-
     print(R)
-    data = R.calculate_rain_rate()
+
+    data = R.calculate_vmi()
+
     print("Plotting..")
     plot_map(lat0,lon1,data,path_output)
     print("...OK!")
