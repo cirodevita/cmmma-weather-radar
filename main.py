@@ -82,7 +82,7 @@ if __name__ == '__main__':
     #lon1 = 15.235667
     #path = 'WR10X/radar/data/av'
 
-    path_output = "radar"
+    path_output = "WR10X/radar"
     R = Radar(lat0,lon1,path)
 
     print(R)
