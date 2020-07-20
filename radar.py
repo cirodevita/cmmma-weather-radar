@@ -26,8 +26,6 @@ class Radar:
         # Applica il filtro statistico sui dati
         sfilt_radar_data = self.apply_statistical_filter(raw_radar_data)
 
-        #sea_cluttered = self.apply_sea_clutter(sfilt_radar_data)
-
         self.radar_data = sfilt_radar_data
 
     def __str__(self):
