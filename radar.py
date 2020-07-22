@@ -25,8 +25,10 @@ class Radar:
         raw_radar_data = self.read_ppi_z_files(self.cab_data)
         # Applica il filtro statistico sui dati
         sfilt_radar_data = self.apply_statistical_filter(raw_radar_data)
+        # Applico attenuazione
+        self.radar_data = self.apply_attenuation(sfilt_radar_data)
 
-        self.radar_data = sfilt_radar_data
+        #self.radar_data = sfilt_radar_data
 
     def __str__(self):
         '''
@@ -108,6 +110,8 @@ class Radar:
             # Elimino gli header in ogni riga
             unpacked_bytes[el] = unpacked_bytes[el][header_size:]
 
+            unpacked_bytes[el][:,359] = unpacked_bytes[el][:,0]
+
         return unpacked_bytes
 
     def apply_statistical_filter(self,radar_data):
@@ -135,6 +139,47 @@ class Radar:
             index+=1
 
         return radar_data
+
+    def apply_attenuation(self,radar_data):
+      
+        for el in radar_data:
+            radar_data[el][(radar_data[el] > 60)] = 60
+      
+        a = 0.000372
+        b = 0.72
+
+        A   = {}
+        PIA = {}
+        Z_filt = {}
+        for el in radar_data:
+            A[el] = np.zeros([240, 360])
+            PIA[el] = np.zeros([240, 360])
+            Z_filt[el] = np.zeros([240, 360])
+
+        
+        # FIXME : RuntimeWarning: invalid value encountered in double_scalars
+        # (dovuto alla ovvia presenza di NaN)
+        for i in range(240):
+            for j in range(360):
+                for el in A:
+                    A[el][i,j] = abs(0.6 * a * (radar_data[el][i, j] ** b))
+                    A[el][np.isnan(A[el])] = 0.0
+
+        for i in range(240):
+            for j in range(360):
+                for el in PIA:
+                    PIA[el][i,j] = A[el][i, j] + PIA[el][i, j - 1]
+                    PIA[el][(PIA[el]>10)] = 10
+                    
+
+
+        for i in range(240):
+            for j in range(360):
+                for el in PIA:
+                    Z_filt[el][i, j] = radar_data[el][i, j] * 10.0 ** ((PIA[el][i, j - 1] + PIA[el][i, j]) / 10.0)
+
+
+        return Z_filt
 
     def calculate_vmi(self):
         '''
