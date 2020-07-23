@@ -110,7 +110,11 @@ class Radar:
             # Elimino gli header in ogni riga
             unpacked_bytes[el] = unpacked_bytes[el][header_size:]
 
-            unpacked_bytes[el][:,359] = unpacked_bytes[el][:,0]
+            #unpacked_bytes[el][0,:] = unpacked_bytes[el][2,:]
+            #unpacked_bytes[el][1,:] = unpacked_bytes[el][2,:]
+
+            # soglie di riflettività sulle matrici raw
+            unpacked_bytes[el][(unpacked_bytes[el] > 55)] = 55
 
         return unpacked_bytes
 
@@ -141,45 +145,54 @@ class Radar:
         return radar_data
 
     def apply_attenuation(self,radar_data):
-      
-        for el in radar_data:
-            radar_data[el][(radar_data[el] > 60)] = 60
-      
+         
         a = 0.000372
         b = 0.72
 
         A   = {}
         PIA = {}
         Z_filt = {}
-        for el in radar_data:
-            A[el] = np.zeros([240, 360])
-            PIA[el] = np.zeros([240, 360])
-            Z_filt[el] = np.zeros([240, 360])
 
         
-        # FIXME : RuntimeWarning: invalid value encountered in double_scalars
-        # (dovuto alla ovvia presenza di NaN)
+        # Conversione riflettivita in Z
+        for el in radar_data:
+            radar_data[el][(radar_data[el] > 60)] = 60
+            radar_data[el] = 10 ** (radar_data[el] / 10)
+
+            A[el]  = np.zeros([240, 360])
+            PIA[el]  = np.zeros([240, 360]) 
+            Z_filt[el]  = np.zeros([240, 360])
+        
+        
         for i in range(240):
             for j in range(360):
-                for el in A:
+                for el in radar_data:
                     A[el][i,j] = abs(0.6 * a * (radar_data[el][i, j] ** b))
                     A[el][np.isnan(A[el])] = 0.0
 
         for i in range(240):
-            for j in range(360):
-                for el in PIA:
+            for j in range(0,360):
+                for el in radar_data:
                     PIA[el][i,j] = A[el][i, j] + PIA[el][i, j - 1]
-                    PIA[el][(PIA[el]>10)] = 10
-                    
-
+        
+        # ?
+        for el in radar_data:
+            PIA[el][(PIA[el]>10)] = 10
+        
 
         for i in range(240):
             for j in range(360):
-                for el in PIA:
-                    Z_filt[el][i, j] = radar_data[el][i, j] * 10.0 ** ((PIA[el][i, j - 1] + PIA[el][i, j]) / 10.0)
+                for el in radar_data:
+                    #radar_data[el][i, j] = radar_data[el][i][j] * 10.0 ** ((PIA[el][i, j - 1] + PIA[el][i, j]) / 10.0)
+                    #radar_data[el][i,j] = radar_data[el][i,j] + PIA[el][i][j-1] + A[el][i][j]
+                    radar_data[el][i,j] = 10*np.log10(radar_data[el][i][j]) + PIA[el][i,j-1] + A[el][i,j]
 
+        for el in radar_data:
+            #radar_data[el] = 10*np.log10(radar_data[el])
+            radar_data[el][(radar_data[el] < 4)] = np.nan
 
-        return Z_filt
+        return radar_data
+
 
     def calculate_vmi(self):
         '''
@@ -198,10 +211,10 @@ class Radar:
                 if dbz_max[i, j] <= 0.0: 
                     dbz_max[i, j] = np.nan
 
-        #TODO: Copia ultimo valore
-        #dbz_max[:,360] = dbz_max[:,0]
+
 
         return dbz_max
+        #return dbz_max
 
     def calculate_rain_rate(self):
         '''
