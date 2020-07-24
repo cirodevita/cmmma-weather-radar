@@ -6,9 +6,12 @@ import numpy as np
 
 from StatisticalFilter import StatisticalFilter
 
+import warnings
+warnings.filterwarnings('ignore')
+
 class Radar:
     
-    def __init__(self,lat0,lon0,cab_data):
+    def __init__(self,lat0,lon0,radar_dir):
         '''
             Costruttore della classe Radar.
 
@@ -19,7 +22,7 @@ class Radar:
         '''
         self.lat0     = lat0
         self.lon0     = lon0
-        self.cab_data = cab_data
+        self.cab_data = os.path.join(radar_dir,'data')
 
         # Legge i dati dai .z
         raw_radar_data = self.read_ppi_z_files(self.cab_data)
@@ -28,11 +31,10 @@ class Radar:
         # Applico attenuazione
         self.radar_data = self.apply_attenuation(sfilt_radar_data)
 
-        #self.radar_data = sfilt_radar_data
 
     def __str__(self):
         '''
-            Serializza la classe Radar mostrando le informazioni pià
+            Serializza la classe Radar mostrando le informazioni più
             importanti.
         '''
         return (f'Scan id: {self.scan_id}\n'
@@ -110,9 +112,6 @@ class Radar:
             # Elimino gli header in ogni riga
             unpacked_bytes[el] = unpacked_bytes[el][header_size:]
 
-            #unpacked_bytes[el][0,:] = unpacked_bytes[el][2,:]
-            #unpacked_bytes[el][1,:] = unpacked_bytes[el][2,:]
-
             # soglie di riflettività sulle matrici raw
             unpacked_bytes[el][(unpacked_bytes[el] > 55)] = 55
 
@@ -145,7 +144,9 @@ class Radar:
         return radar_data
 
     def apply_attenuation(self,radar_data):
-         
+        '''
+            Correzione dell'attenuazione di percorso (PIA Algorithm)
+        '''
         a = 0.000372
         b = 0.72
 
@@ -153,7 +154,6 @@ class Radar:
         PIA = {}
         Z_filt = {}
 
-        
         # Conversione riflettivita in Z
         for el in radar_data:
             radar_data[el][(radar_data[el] > 60)] = 60
@@ -198,7 +198,6 @@ class Radar:
         '''
             Calcola la VMI della scansione.
         '''
-
         data = []
         for el in self.radar_data:
             data.append(self.radar_data[el])
@@ -211,10 +210,8 @@ class Radar:
                 if dbz_max[i, j] <= 0.0: 
                     dbz_max[i, j] = np.nan
 
-
-
         return dbz_max
-        #return dbz_max
+
 
     def calculate_rain_rate(self):
         '''
@@ -229,3 +226,4 @@ class Radar:
         rain_rate = pow(pow(10,vmi/10)/a,1/b)
 
         return rain_rate
+
