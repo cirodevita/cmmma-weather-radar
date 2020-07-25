@@ -42,8 +42,9 @@ class Radar:
                 f'Data: {self.scan_datestamp}\n'
                 f'Cab content: {self.cab_data}\n'
                 f'Radar location (lat,lon): {self.lat0} {self.lon0}\n'
-                f'Radar range: {self.radar_range}\n'
-                f'Radar resolution: {self.radar_resolution}\n')
+                f'Radar range (km): {self.radar_range}\n'
+                f'Radar resolution (m): {self.radar_resolution}\n'
+                f'Beam per azimut: {self.radar_ndata}')
 
     def read_ppi_z_files(self,cab_data):
         '''
@@ -87,9 +88,12 @@ class Radar:
                     with open(os.path.join(cab_data,file_name),'rb') as file:
                         raw_bytes[el] = file.read()
 
-        # Leggo la risoluzione del radar e il suo raggio
-        self.radar_range = int(meta_data[4])*100
+        # Raggio del radar
+        self.radar_range = int(meta_data[4])/10
+        # Risoluzione del radar
         self.radar_resolution = int(meta_data[5])
+        # Numero di beam lungo una direzione
+        self.radar_ndata = int(self.radar_range*1000 / self.radar_resolution)
 
         # Effettuo un unpack di bytes in gruppi da 16 bit (ushort) in little endian
         unpacked_bytes = {}
@@ -100,7 +104,7 @@ class Radar:
             data_format = unpacked_bytes[el][header_size-1]
 
             # Reshape dei dati
-            unpacked_bytes[el] =  np.reshape(unpacked_bytes[el] ,(263, 360), 'F')
+            unpacked_bytes[el] =  np.reshape(unpacked_bytes[el] ,(self.radar_ndata+header_size, 360), 'F')
             # Converto i dati in float32 (Requisito del filtro statistico)
             unpacked_bytes[el] = unpacked_bytes[el].astype('float32')
             # Converto i dati di dbz (dalla documentazione del WR10X)
@@ -159,18 +163,18 @@ class Radar:
             radar_data[el][(radar_data[el] > 60)] = 60
             radar_data[el] = 10 ** (radar_data[el] / 10)
 
-            A[el]  = np.zeros([240, 360])
-            PIA[el]  = np.zeros([240, 360]) 
-            Z_filt[el]  = np.zeros([240, 360])
+            A[el]  = np.zeros([self.radar_ndata, 360])
+            PIA[el]  = np.zeros([self.radar_ndata, 360]) 
+            Z_filt[el]  = np.zeros([self.radar_ndata, 360])
         
         
-        for i in range(240):
+        for i in range(self.radar_ndata):
             for j in range(360):
                 for el in radar_data:
                     A[el][i,j] = abs(0.6 * a * (radar_data[el][i, j] ** b))
                     A[el][np.isnan(A[el])] = 0.0
 
-        for i in range(240):
+        for i in range(self.radar_ndata):
             for j in range(0,360):
                 for el in radar_data:
                     PIA[el][i,j] = A[el][i, j] + PIA[el][i, j - 1]
@@ -180,7 +184,7 @@ class Radar:
             PIA[el][(PIA[el]>10)] = 10
         
 
-        for i in range(240):
+        for i in range(self.radar_ndata):
             for j in range(360):
                 for el in radar_data:
                     #radar_data[el][i, j] = radar_data[el][i][j] * 10.0 ** ((PIA[el][i, j - 1] + PIA[el][i, j]) / 10.0)
@@ -202,8 +206,8 @@ class Radar:
         for el in self.radar_data:
             data.append(self.radar_data[el])
 
-        dbz_max = np.empty([240, 360])
-        for i in range(240):
+        dbz_max = np.empty([self.radar_ndata, 360])
+        for i in range(self.radar_ndata):
             for j in range(360):
                 dbz_max[i, j] = np.nanmax( [item[i][j] for item in data] )
 
@@ -221,7 +225,7 @@ class Radar:
         b = 1.67
         vmi = self.calculate_vmi()
 
-        rain_rate = np.empty([240, 360])
+        rain_rate = np.empty([self.radar_ndata, 360])
 
         rain_rate = pow(pow(10,vmi/10)/a,1/b)
 
