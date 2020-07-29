@@ -11,7 +11,7 @@ warnings.filterwarnings('ignore')
 
 class Radar:
     
-    def __init__(self,lat0,lon0,radar_dir):
+    def __init__(self,lat0,lon0,kmdeg,radar_dir):
         '''
             Costruttore della classe Radar.
 
@@ -22,7 +22,9 @@ class Radar:
         '''
         self.lat0     = lat0
         self.lon0     = lon0
+        self.kmdeg    = kmdeg
         self.cab_data = os.path.join(radar_dir,'data')
+
 
         # Legge i dati dai .z
         raw_radar_data = self.read_ppi_z_files(self.cab_data)
@@ -30,6 +32,10 @@ class Radar:
         sfilt_radar_data = self.apply_statistical_filter(raw_radar_data)
         # Applico attenuazione
         self.radar_data = self.apply_attenuation(sfilt_radar_data)
+        # Calcolo VMI
+        self.vmi = self.calculate_vmi()
+        # Calcolo Rain rate
+        self.rain_rate = self.calculate_rain_rate()
 
 
     def __str__(self):
@@ -223,11 +229,37 @@ class Radar:
         '''
         a = 128.3
         b = 1.67
-        vmi = self.calculate_vmi()
 
         rain_rate = np.empty([self.radar_ndata, 360])
 
-        rain_rate = pow(pow(10,vmi/10)/a,1/b)
+        rain_rate = pow(pow(10,self.vmi/10)/a,1/b)
 
         return rain_rate
+
+
+    def create_grid(self):
+        ndata = self.radar_ndata
+
+        rkm = np.zeros(ndata)
+        for j in range(ndata):
+            rkm[j] = self.radar_range *j/ndata
+
+        z = np.zeros(360)
+        for i in range(360):
+            z[i] = np.pi*i/180
+
+        self.lat = np.zeros([360, ndata], float)
+        self.lon = np.zeros([360, ndata], float)
+
+        for j in range(ndata):
+            for i in range(360):
+                self.lat[i, j] = self.lat0 + np.cos(z[i]) * rkm[j] / self.kmdeg
+                self.lon[i, j] = self.lon0 + np.sin(z[i]) * (rkm[j] / self.kmdeg ) / np.cos(np.pi * self.lat[i, j] / 180.0)
+        
+        self.latmin = np.nanmin(self.lat)
+        self.latmax = np.nanmax(self.lat)
+        self.lonmin = np.nanmin(self.lon) - 0.02
+        self.lonmax = np.nanmax(self.lon) + 0.02
+
+
 
