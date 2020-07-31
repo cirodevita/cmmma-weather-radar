@@ -6,12 +6,14 @@ import numpy as np
 
 from StatisticalFilter import StatisticalFilter
 
+import netCDF4 as nc
+
 import warnings
 warnings.filterwarnings('ignore')
 
 class Radar:
     
-    def __init__(self,lat0,lon0,kmdeg,radar_dir):
+    def __init__(self,lat0,lon0,kmdeg,radar_dir,radar_name):
         '''
             Costruttore della classe Radar.
 
@@ -24,6 +26,7 @@ class Radar:
         self.lon0     = lon0
         self.kmdeg    = kmdeg
         self.cab_data = os.path.join(radar_dir,'data')
+        self.radar_name = radar_name
 
 
         # Legge i dati dai .z
@@ -35,7 +38,7 @@ class Radar:
         # Calcolo VMI
         self.vmi = self.calculate_vmi()
         # Calcolo Rain rate
-        self.rain_rate = self.calculate_rain_rate()
+        #self.rain_rate = self.calculate_rain_rate()
 
 
     def __str__(self):
@@ -260,6 +263,57 @@ class Radar:
         self.latmax = np.nanmax(self.lat)
         self.lonmin = np.nanmin(self.lon) - 0.02
         self.lonmax = np.nanmax(self.lon) + 0.02
+
+    def save_as_netcd4(self):
+
+        # Effettua l'interpolazione tra l'array circolare e il grigiato
+
+        self.create_grid()
+    
+        c_lat = self.lat
+        c_lon = self.lon
+
+        grid_dim = 480
+
+        grid_lat = np.arange(self.latmin,self.latmax,(self.latmax-self.latmin)/grid_dim)
+        grid_lon = np.arange(self.lonmin,self.lonmax,(self.lonmax-self.lonmin)/grid_dim)
+
+        grid = np.full([grid_dim,grid_dim],-999)
+
+        for i in range(len(self.vmi)):
+            for j in range(len(self.vmi[0])):
+                if(not np.isnan(self.vmi[i,j])):
+                    best_lat = np.abs(grid_lat-c_lat[j,i]).argmin()
+                    best_lon = np.abs(grid_lon-c_lon[j,i]).argmin()
+                    grid[best_lat,best_lon] = np.round(self.vmi[i,j])
+                
+        grid_lat = np.array([grid_lat,]*grid_dim).transpose()
+        grid_lon = np.array([grid_lon]*grid_dim)
+
+        fn = f'{self.radar_name}_{self.scan_datestamp}.nc'
+        ds = nc.Dataset(fn, 'w', format='NETCDF4')
+
+        # Dimensions
+        ds.createDimension('eta_rho', grid_dim)
+        ds.createDimension('xi_rho', grid_dim)
+
+        # add unlimited dimension time
+        lats = ds.createVariable('lat', 'f4', ('eta_rho','xi_rho'))
+        lats.units = 'degree_north'
+        lats._CoordinateAxisType = 'Lat'
+
+        lons = ds.createVariable('lon', 'f4', ('eta_rho','xi_rho'))
+        lons.units = 'degree_east'
+        lons._CoordinateAxisType = 'Lon'
+
+        reflectivity = ds.createVariable('reflectivity', 'i', ('eta_rho','xi_rho'),fill_value=-999)
+
+        reflectivity[:] = grid
+        lats[::] = grid_lat
+        lons[::] = grid_lon
+
+        ds.close()
+
 
 
 

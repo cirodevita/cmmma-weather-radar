@@ -2,8 +2,14 @@ from radar import Radar
 import numpy as np
 import os
 
+
+
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
+
+
+import sys
+np.set_printoptions(threshold=sys.maxsize)
 
 def generate_plot(radar):
 
@@ -67,8 +73,16 @@ if __name__ == '__main__':
     path_data = "WR10X"
     path_output = "WR10X"
 
-    R = Radar(lat0,lon1,kmdeg,radar_dir)
+    print("Reading data...")
+    R = Radar(lat0,lon1,kmdeg,radar_dir,radar_name)
     print(R)
-    generate_plot(R)
 
+    print("Creating netcdf4 file...")
+    R.save_as_netcd4()
+    print("OK")
+
+
+    print("Create plot image...")
+    generate_plot(R)
+    print("OK")
    
