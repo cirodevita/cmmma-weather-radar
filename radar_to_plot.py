@@ -51,14 +51,12 @@ def radar_to_plot(R,output_dir=''):
 
 if __name__ == '__main__':
 
-    output_dir = ''
-    radar_id = 'NA'
-    radar_location = (40.843812,14.238565)
-    kmdeg = 111.0
-    radar_dir = f'WR10X/{radar_id}/data'
+
+    radar_NA = 'WR10X/NA/radar_info.json'
+    radar_AV = 'WR10X/AV/radar_info.json'
 
     print("Reading data...")
-    R = Radar(radar_id,radar_location,kmdeg,radar_dir)
+    R = Radar(radar_NA)
     print(R)
 
     print("Saving data as plot...")

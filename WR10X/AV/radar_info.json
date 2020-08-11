@@ -1,0 +1,15 @@
+{
+    "radar_id":"AV",
+    "radar_location":[
+       "41.052167",
+       "15.235667"
+    ],
+    "kmdeg":111,
+    "dir_data":"WR10X/AV/data",
+    "statistical_filter": {
+        "Etn_Th" : 0.0005,
+        "Txt_Th" : 7.0,
+        "Z_Th" : -32
+    },
+    "sea_clutter" : null
+ }

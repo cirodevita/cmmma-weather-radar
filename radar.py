@@ -1,6 +1,7 @@
 import os
 import sys
 import struct
+import json
 from datetime import datetime
 import numpy as np
 
@@ -11,16 +12,24 @@ warnings.filterwarnings('ignore')
 
 class Radar:
 
-    def __init__ (self, id:str, location:set, kmdeg:float, dir_data: str):
+    def __init__ (self, radar_config_file_path):
+
+        with open(radar_config_file_path) as f:
+            config_file = json.load(f)
         
-        self._id = id
-        self._location = location
-        self._kmdeg = kmdeg
-        self._dir_data = dir_data
+        self._id       = config_file['radar_id']
+        self._location = (float(config_file['radar_location'][0]),float(config_file['radar_location'][1]))
+        self._kmdeg    = float(config_file['kmdeg'])
+        self._dir_data = config_file['dir_data']
+
+        self._config_file = config_file
 
         self._data = self.read_ppi_z_files()
         
         self.apply_statistical_filter()
+
+        if self._config_file['sea_clutter'] is not None:
+            self.remove_sea_clutter()
 
         #self.apply_attenuation()
 
@@ -122,9 +131,9 @@ class Radar:
             data_mappe.append(self._data[el])
 
         Mappe = np.array(data_mappe)
-        Etn_Th = 0.0005
-        Txt_Th = 14.0
-        Z_Th = -32
+        Etn_Th = self._config_file['statistical_filter']['Etn_Th']
+        Txt_Th = self._config_file['statistical_filter']['Txt_Th']
+        Z_Th   = self._config_file['statistical_filter']['Z_Th']
 
         d_filt1 = StatisticalFilter(Mappe, Etn_Th, Txt_Th, Z_Th)
         # Scompongo in dati filtrati
@@ -132,6 +141,31 @@ class Radar:
         for el in self._data:
             self._data[el] = d_filt1[index,:,:]
             index+=1
+
+    def remove_sea_clutter(self):
+
+        rd = np.empty([self._ndata, 360])
+
+        v1 = self._config_file['sea_clutter']['levels'][0]
+        v2 = self._config_file['sea_clutter']['levels'][1]
+        T1 = self._config_file['sea_clutter']['T1']
+        T2 = self._config_file['sea_clutter']['T2']
+
+        theta1 = self._config_file['sea_clutter']['interval'][0]
+        theta2 = self._config_file['sea_clutter']['interval'][1]
+        rho1 = self._config_file['sea_clutter']['interval'][2]
+        rho2 = self._config_file['sea_clutter']['interval'][3]
+
+
+        for i in range(self._ndata):
+            for j in range(360):
+                rd[i, j] = self._data[v1][i,j] - self._data[v2][i,j]
+        rd[rd == 0] = np.nan
+
+        for j in range(theta1, theta2):
+            for i in range(rho1,rho2):
+                if (rd[i, j] > T1) or (rd[i, j] > 0.0 and self._data[v2][i, j] < T2):
+                    self._data[v1][i, j] = self._data[v2][i, j]
 
 
     def apply_attenuation(self):

@@ -1,0 +1,20 @@
+{
+    "radar_id":"NA",
+    "radar_location":[
+       "40.843812",
+       "14.238565"
+    ],
+    "kmdeg":111,
+    "dir_data":"WR10X/NA/data",
+    "statistical_filter": {
+        "Etn_Th" : 0.0005,
+        "Txt_Th" : 14.0,
+        "Z_Th" : -32
+    },
+    "sea_clutter" : {
+        "interval" : [126,256,0,70],
+        "levels" : ["01","02"],
+        "T1" : 50.0,
+        "T2" : 0.0
+    }
+ }
