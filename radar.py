@@ -190,7 +190,6 @@ class Radar:
                         self._data[el][i,j] = np.nan
                     self._data[el][i,j] += MC[el][i,j]
 
-        print("OK")
         
 
     def apply_attenuation(self):
