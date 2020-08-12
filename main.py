@@ -5,15 +5,11 @@ from radar_to_netcdf4 import radar_to_netcdf4
 
 if __name__ == '__main__':
 
-    path_output = ''
-      
-    radar_id = 'NA'
-    radar_location = (40.843812,14.238565)
-    kmdeg = 111.0
-    radar_dir = f'WR10X/{radar_id}/data'
+    radar_NA = 'WR10X/NA/radar_info.json'
+    radar_AV = 'WR10X/AV/radar_info.json'
    
     print("Reading data...")
-    R = Radar(radar_id,radar_location,kmdeg,radar_dir)
+    R = Radar(radar_NA)
     print(R)
 
     print("Creating netcdf4 file...")

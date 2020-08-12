@@ -11,5 +11,6 @@
         "Txt_Th" : 7.0,
         "Z_Th" : -32
     },
-    "sea_clutter" : null
+    "sea_clutter" : null,
+    "com_map_path" : "WR10X/AV/"
  }

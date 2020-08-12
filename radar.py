@@ -30,7 +30,10 @@ class Radar:
 
         if self._config_file['sea_clutter'] is not None:
             self.remove_sea_clutter()
-
+    
+        if self._config_file['com_map_path'] is not None:
+            self.beam_blocking()
+        
         #self.apply_attenuation()
 
         self.create_grid()
@@ -167,6 +170,28 @@ class Radar:
                 if (rd[i, j] > T1) or (rd[i, j] > 0.0 and self._data[v2][i, j] < T2):
                     self._data[v1][i, j] = self._data[v2][i, j]
 
+
+    def beam_blocking(self):
+
+        cm_path = self._config_file['com_map_path']
+        files = os.listdir(cm_path)
+
+        MC = {}
+        for f in files:
+            if(f.startswith('mc')):
+                el = f.split('-')[1]
+                MC[el] = np.loadtxt(os.path.join(cm_path,f))
+
+        
+        for el in MC:
+            for i in range(self._ndata):
+                for j in range(360):
+                    if self._data[el][i,j] <= 0.0:
+                        self._data[el][i,j] = np.nan
+                    self._data[el][i,j] += MC[el][i,j]
+
+        print("OK")
+        
 
     def apply_attenuation(self):
         '''
