@@ -2,6 +2,7 @@ import numpy as np
 import netCDF4 as nc
 from radar import Radar
 
+
 def radar_to_netcdf4(R,output_dir=''):
 
         c_lat = R.lat
@@ -16,13 +17,46 @@ def radar_to_netcdf4(R,output_dir=''):
 
         vmi = R.calculate_vmi()
 
-        for i in range(len(vmi)):
-            for j in range(len(vmi[0])):
-                if(not np.isnan(vmi[i,j])):
-                    best_lat = np.abs(grid_lat-c_lat[j,i]).argmin()
-                    best_lon = np.abs(grid_lon-c_lon[j,i]).argmin()
-                    grid[best_lat,best_lon] = np.round(vmi[i,j])
-                
+        lat0 = R._location[0]
+        lon0 = R._location[1]
+
+
+        offset_i = np.abs(grid_lon-lon0).argmin()
+        offset_j = np.abs(grid_lat-lat0).argmin()
+
+        for j in range(1,len(grid_lat)):
+            for i in range(1,len(grid_lon)):
+                x = i-offset_i
+                y = j-offset_j
+                r = np.sqrt(x**2+y**2)
+                t = np.arctan2(y, x)
+                t = t * 180 / np.pi
+
+
+                if(grid_lat[j] > (R.latmax-R.latmin)/2 and grid_lon[i] < (R.lonmax-R.lonmin)/2):
+                    t += 180
+
+                elif(grid_lat[j] < (R.latmax-R.latmin)/2 and grid_lon[i] < (R.lonmax-R.lonmin)/2):
+                    t += 180
+
+                elif(grid_lat[j] < (R.latmax-R.latmin)/2 and grid_lon[i] > (R.lonmax-R.lonmin)/2):
+                    t+=360
+
+            
+                if np.isnan(t):
+                    continue
+            
+                r = int(r)
+                t = int(t)
+
+                if(r < 240):      
+            
+                    if np.isnan(vmi[r,t]):
+                        grid[i,j] = -999
+                    else: 
+                        grid[i,j] = np.round(vmi[r,t])
+                    
+
         grid_lat = np.array([grid_lat,]*grid_dim).transpose()
         grid_lon = np.array([grid_lon]*grid_dim)
 
@@ -48,16 +82,13 @@ def radar_to_netcdf4(R,output_dir=''):
 
         ds.close()
 
+
 if __name__ == '__main__':
 
-    output_dir = ''
-    radar_id = 'NA'
-    radar_location = (40.843812,14.238565)
-    kmdeg = 111.0
-    radar_dir = f'WR10X/{radar_id}/data'
+    radar_NA = 'WR10X/NA/radar_info.json'
 
     print("Reading data...")
-    R = Radar(radar_id,radar_location,kmdeg,radar_dir)
+    R = Radar(radar_NA)
     print(R)
 
     print("Saving data as netcdf4...")
