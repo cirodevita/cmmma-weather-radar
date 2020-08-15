@@ -21,8 +21,8 @@ def radar_to_netcdf4(R,output_dir=''):
         lon0 = R._location[1]
 
 
-        offset_i = np.abs(grid_lon-lon0).argmin()
-        offset_j = np.abs(grid_lat-lat0).argmin()
+        offset_j = np.abs(grid_lon-lon0).argmin()
+        offset_i = np.abs(grid_lat-lat0).argmin()
 
         for j in range(1,len(grid_lat)):
             for i in range(1,len(grid_lon)):
@@ -31,18 +31,7 @@ def radar_to_netcdf4(R,output_dir=''):
                 r = np.sqrt(x**2+y**2)
                 t = np.arctan2(y, x)
                 t = t * 180 / np.pi
-
-
-                if(grid_lat[j] > (R.latmax-R.latmin)/2 and grid_lon[i] < (R.lonmax-R.lonmin)/2):
-                    t += 180
-
-                elif(grid_lat[j] < (R.latmax-R.latmin)/2 and grid_lon[i] < (R.lonmax-R.lonmin)/2):
-                    t += 180
-
-                elif(grid_lat[j] < (R.latmax-R.latmin)/2 and grid_lon[i] > (R.lonmax-R.lonmin)/2):
-                    t+=360
-
-            
+     
                 if np.isnan(t):
                     continue
             
@@ -50,7 +39,6 @@ def radar_to_netcdf4(R,output_dir=''):
                 t = int(t)
 
                 if(r < 240):      
-            
                     if np.isnan(vmi[r,t]):
                         grid[i,j] = -999
                     else: 
@@ -60,21 +48,23 @@ def radar_to_netcdf4(R,output_dir=''):
         grid_lat = np.array([grid_lat,]*grid_dim).transpose()
         grid_lon = np.array([grid_lon]*grid_dim)
 
-        fn = f'{R._id}_{R._scan_datestamp}.nc'
+
+        datestamp = str(R._scan_datestamp).replace(':','-')
+        fn = f'{R._id}_{datestamp}.nc'
         ds = nc.Dataset(fn, 'w', format='NETCDF4')
 
-        ds.createDimension('eta_rho', grid_dim)
-        ds.createDimension('xi_rho', grid_dim)
+        ds.createDimension('X', grid_dim)
+        ds.createDimension('Y', grid_dim)
 
-        lats = ds.createVariable('lat', 'f4', ('eta_rho','xi_rho'))
+        lats = ds.createVariable('lat', 'f4', ('X','Y'))
         lats.units = 'degree_north'
         lats._CoordinateAxisType = 'Lat'
 
-        lons = ds.createVariable('lon', 'f4', ('eta_rho','xi_rho'))
+        lons = ds.createVariable('lon', 'f4', ('X','Y'))
         lons.units = 'degree_east'
         lons._CoordinateAxisType = 'Lon'
 
-        reflectivity = ds.createVariable('reflectivity', 'i', ('eta_rho','xi_rho'),fill_value=-999)
+        reflectivity = ds.createVariable('reflectivity', 'i', ('X','Y'),fill_value=-999)
 
         reflectivity[:] = grid
         lats[::] = grid_lat
@@ -86,10 +76,14 @@ def radar_to_netcdf4(R,output_dir=''):
 if __name__ == '__main__':
 
     radar_NA = 'WR10X/NA/radar_info.json'
+    radar_AV = 'WR10X/AV/radar_info.json'
+    
 
     print("Reading data...")
-    R = Radar(radar_NA)
+    R = Radar(radar_AV)
     print(R)
+
+
 
     print("Saving data as netcdf4...")
     radar_to_netcdf4(R)
