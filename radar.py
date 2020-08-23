@@ -12,7 +12,7 @@ warnings.filterwarnings('ignore')
 
 class Radar:
 
-    def __init__ (self, radar_config_file_path):
+    def __init__ (self, radar_config_file_path, scan_data):
 
         with open(radar_config_file_path) as f:
             config_file = json.load(f)
@@ -20,20 +20,19 @@ class Radar:
         self._id       = config_file['radar_id']
         self._location = (float(config_file['radar_location'][0]),float(config_file['radar_location'][1]))
         self._kmdeg    = float(config_file['kmdeg'])
-        self._dir_data = config_file['dir_data']
-
+        self._dir_data = os.path.join(config_file['dir_data'],scan_data)
         self._config_file = config_file
 
         self._data = self.read_ppi_z_files()
         
         self.apply_statistical_filter()
-
+        
         if self._config_file['sea_clutter'] is not None:
             self.remove_sea_clutter()
-    
+      
         if self._config_file['com_map_path'] is not None:
             self.beam_blocking()
-        
+       
         #self.apply_attenuation()
 
         self.create_grid()
@@ -66,12 +65,11 @@ class Radar:
 
         """
 
-        files = os.listdir(self._dir_data)
-    
+        files = os.listdir(os.path.join(self._dir_data))
         # Cerco il file .Scan
         self._scan_name = ''.join([f for f in files if f.endswith(('.Scan'))])
         if not self._scan_name :
-            raise FileNotFound
+            raise FileNotFoundError
         
         # Leggo lo scan id
         with open(os.path.join(self._dir_data,self._scan_name),'r') as sf:
@@ -283,7 +281,8 @@ class Radar:
         rkm = np.zeros(ndata)
         for j in range(ndata):
             rkm[j] = self._range *j/ndata
-
+        
+        # angoli da 0 a 359 in radianti
         z = np.zeros(360)
         for i in range(360):
             z[i] = np.pi*i/180

@@ -6,7 +6,7 @@ from radar import Radar
 
 np.set_printoptions(threshold=sys.maxsize)
 
-def compose(radars):
+def compose(radars,output_dir=''):
 
     radar_area_lat = []
     radar_area_lon = []
@@ -36,8 +36,8 @@ def compose(radars):
         offset_j = np.abs(grid_lon-lon0).argmin()
         offset_i = np.abs(grid_lat-lat0).argmin()
 
-        for j in range(1,lat_dim):
-            for i in range(1,lon_dim):
+        for j in range(1,lon_dim):
+            for i in range(1,lat_dim):
                 x = i-offset_i
                 y = j-offset_j
                 r = np.sqrt(x**2+y**2)
@@ -49,10 +49,11 @@ def compose(radars):
             
                 r = int(r)
                 t = int(t)
-
+               
                 if(r < R._ndata): 
                     if not np.isnan(vmi[r,t]) and grid[i,j] < np.round(vmi[r,t]):
                         grid[i,j] = np.round(vmi[r,t])
+                        
                     
     grid_lat = np.array([grid_lat]*lon_dim).transpose()
     grid_lon = np.array([grid_lon]*lat_dim)
@@ -91,9 +92,11 @@ if __name__ == '__main__':
     radar_NA = 'WR10X/NA/radar_info.json'
     radar_AV = 'WR10X/AV/radar_info.json'
 
+    scan_name = 'A00-202006051030'
+
     radars = []
-    radars.append(Radar(radar_NA))
-    radars.append(Radar(radar_AV))
+    radars.append(Radar(radar_NA,scan_name))
+    radars.append(Radar(radar_AV,scan_name))
 
     compose(radars)
     
