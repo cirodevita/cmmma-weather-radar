@@ -34,33 +34,68 @@ def aggregate(path,output_path=''):
         lons._CoordinateAxisType = 'Lon'
 
         reflectivity = aggregated_file.createVariable('reflectivity', 'i', ('X','Y'),fill_value=-999)
+        rain_rate    = aggregated_file.createVariable('rain_rate','i',('X','Y'),fill_value=-999)
+        poh_rate    = aggregated_file.createVariable('poh','i',('X','Y'),fill_value=-999)
+
 
         lats[::] = lat
         lons[::] = lon
 
-        data = []
+        vmi = []
+        rr  = []
+        poh = []
         for f in t_files:
             nf = nc.Dataset(os.path.join(path,f), 'r', format='NETCDF4')
-            data.append(nf['reflectivity'][::])
+            vmi.append(nf['reflectivity'][::])
+            rr.append(nf['rain_rate'][::])
+            poh.append(nf['poh'][::])
 
-        mean =  grid = np.full([len(lat),len(lon[0])],-999)
+        # Calculte mean
+        
+        mean_vmi =  grid = np.full([len(lat),len(lon[0])],-999)
+        mean_rr  =  grid = np.full([len(lat),len(lon[0])],-999)
+        mean_poh =  grid = np.full([len(lat),len(lon[0])],-999)
 
-        for i in range(len(mean)):
-            for j in range(len(mean[0])):
-                for d in data:
+        for i in range(len(mean_vmi)):
+            for j in range(len(mean_vmi[0])):
+
+                for d in vmi:
                     if (d[i,j] != -999):
-                        if mean[i,j] == -999:
-                            mean[i,j] = d[i,j]
+                        if mean_vmi[i,j] == -999:
+                            mean_vmi[i,j] = d[i,j]
                         else:
-                            mean[i,j] += d[i,j]
-        
+                            mean_vmi[i,j] += d[i,j]
+                for d in rr:
+                    if (d[i,j] != -999):
+                        if mean_rr[i,j] == -999:
+                            mean_rr[i,j] = d[i,j]
+                        else:
+                            mean_rr[i,j] += d[i,j]
 
-        for i in range(len(mean)):
-            for j in range(len(mean[0])):
-                if mean[i,j] != -999:
-                    mean[i,j] /= len(data)
+                for d in poh:
+                    if (d[i,j] != -999):
+                        if mean_poh[i,j] == -999:
+                            mean_poh[i,j] = d[i,j]
+                        else:
+                            mean_poh[i,j] += d[i,j]
+
+        for i in range(len(mean_vmi)):
+            for j in range(len(mean_vmi[0])):
+
+                if mean_vmi[i,j] != -999:
+                    mean_vmi[i,j] /= len(vmi)
+
+                if mean_rr[i,j] != -999:
+                    mean_rr[i,j] /= len(rr)
+
+                if mean_poh[i,j] != -999:
+                    mean_poh[i,j] /= len(poh)
+
         
-        reflectivity[::] = mean
+        
+        reflectivity[::] = mean_vmi
+        rain_rate[:] = mean_rr
+        poh_rate[:] = mean_poh
 
         aggregated_file.close()
 
