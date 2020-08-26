@@ -12,5 +12,6 @@
         "Z_Th" : -32
     },
     "sea_clutter" : null,
-    "com_map_path" : "../data/AV"
+    "com_map_path" : "../data/AV",
+    "H_dir" : "../data/AV/H"
  }

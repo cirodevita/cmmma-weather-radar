@@ -10,6 +10,8 @@ from .utils.statistical_filter import StatisticalFilter
 import warnings
 warnings.filterwarnings('ignore')
 
+np.set_printoptions(threshold=sys.maxsize)
+
 class Radar:
 
     def __init__ (self, radar_config_file_path, scan_data):
@@ -31,11 +33,11 @@ class Radar:
         
         if self._config_file['sea_clutter'] is not None:
             self.remove_sea_clutter()
-      
+        
         if self._config_file['com_map_path'] is not None:
             self.beam_blocking()
-       
-        #self.apply_attenuation()
+
+        self.apply_attenuation()
 
         self.create_grid()
 
@@ -190,7 +192,7 @@ class Radar:
                         self._data[el][i,j] = np.nan
                     self._data[el][i,j] += MC[el][i,j]
 
-        
+
 
     def apply_attenuation(self):
         '''
@@ -222,9 +224,9 @@ class Radar:
         for i in range(self._ndata):
             for j in range(0,360):
                 for el in self._data:
-                    PIA[el][i,j] = A[el][i, j] + PIA[el][i, j - 1]
+                    PIA[el][i,j] = A[el][i, j] + PIA[el][i-1, j]
         
-        # ?
+
         for el in self._data:
             PIA[el][(PIA[el]>10)] = 10
         
@@ -232,8 +234,6 @@ class Radar:
         for i in range(self._ndata):
             for j in range(360):
                 for el in  self._data:
-                    #radar_data[el][i, j] = radar_data[el][i][j] * 10.0 ** ((PIA[el][i, j - 1] + PIA[el][i, j]) / 10.0)
-                    #radar_data[el][i,j] = radar_data[el][i,j] + PIA[el][i][j-1] + A[el][i][j]
                     self._data[el][i,j] = 10*np.log10( self._data[el][i][j]) + PIA[el][i,j-1] + A[el][i,j]
 
         for el in  self._data:
@@ -259,6 +259,7 @@ class Radar:
 
         return vmi
 
+
     def calculate_rain_rate(self):
         '''
             Calcola il rain_rate
@@ -273,6 +274,35 @@ class Radar:
         rain_rate = pow(pow(10,vmi/10)/a,1/b)
 
         return rain_rate
+
+    
+    
+    def calculate_vil(self):
+        
+        el = ['01','02','03','04','05','07','10','12','15']
+        H = []
+        for f in el:
+            H.append(np.loadtxt(os.path.join(self._config_file['H_dir'],f)))
+
+        a = 3.44 * (10**-6)
+        b = 4/7.0
+
+        Zf = []
+        for level in el:
+            Zf.append(self._data[level])
+
+        Zf = 10 ** (np.array(Zf) / 10.0)
+        Zf[np.isnan(Zf)] = 0
+
+        w = a * (Zf ** b)
+
+
+        VIL = w[0,:,:]*H[0]
+    
+        for k in range(1,9):
+            VIL += w[k-1]*(H[k]-H[k-1]) + ((H[k]-H[k-1])*(w[k]-w[k-1]))/2
+
+        return VIL
 
     def create_grid(self):
         '''
@@ -302,3 +332,6 @@ class Radar:
         self.lonmin = np.nanmin(self.lon) - 0.02
         self.lonmax = np.nanmax(self.lon) + 0.02
     
+
+   
+        

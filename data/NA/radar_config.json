@@ -17,5 +17,6 @@
         "T1" : 50.0,
         "T2" : 0.0
     },
-    "com_map_path" : "../data/NA"
+    "com_map_path" : "../data/NA",
+    "H_dir" : "../data/NA/H"
  }
