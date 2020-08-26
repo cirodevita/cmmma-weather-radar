@@ -27,11 +27,15 @@ def compose(radars,output_dir=''):
     grid_lat = np.arange(latmin,latmax,(latmax-latmin)/lat_dim)
     grid_lon = np.arange(lonmin,lonmax,(lonmax-lonmin)/lon_dim)
 
-    grid = np.full([lat_dim,lon_dim],-999)
+    grid_vmi = np.full([lat_dim,lon_dim],-999)
+    grid_poh = np.full([lat_dim,lon_dim],-999)
+    grid_rr  = np.full([lat_dim,lon_dim],-999)
 
     for R in radars:
 
         vmi = R.calculate_vmi()
+        poh = R.calculate_poh()
+        rainrate = R.calculate_rain_rate()
         lat0 = R._location[0]
         lon0 = R._location[1]
 
@@ -53,8 +57,12 @@ def compose(radars,output_dir=''):
                 t = int(t)
                
                 if(r < R._ndata): 
-                    if not np.isnan(vmi[r,t]) and grid[i,j] < np.round(vmi[r,t]):
-                        grid[i,j] = np.round(vmi[r,t])
+                    if not np.isnan(vmi[r,t]) and grid_vmi[i,j] < vmi[r,t]:
+                        grid_vmi[i,j] = vmi[r,t]
+                    if not np.isnan(poh[r,t]) and grid_poh[i,j] < poh[r,t]:
+                        grid_poh[i,j] = poh[r,t]
+                    if not np.isnan(rainrate[r,t]) and grid_rr[i,j] < rainrate[r,t]:
+                        grid_rr[i,j] = rainrate[r,t]
                         
                     
     grid_lat = np.array([grid_lat]*lon_dim).transpose()
@@ -79,9 +87,15 @@ def compose(radars,output_dir=''):
     lons.units = 'degree_east'
     lons._CoordinateAxisType = 'Lon'
 
+   
     reflectivity = ds.createVariable('reflectivity', 'i', ('X','Y'),fill_value=-999)
+    rain_rate    = ds.createVariable('rain_rate','i',('X','Y'),fill_value=-999)
+    poh          = ds.createVariable('poh','i',('X','Y'),fill_value=-999)
 
-    reflectivity[::] = grid
+
+    reflectivity[:] = grid_vmi
+    rain_rate[:] = grid_rr
+    poh[:] = grid_poh
     lats[::] = grid_lat
     lons[::] = grid_lon
 
