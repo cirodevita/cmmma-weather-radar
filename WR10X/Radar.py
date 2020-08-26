@@ -276,9 +276,8 @@ class Radar:
         return rain_rate
 
     
-    
-    def calculate_vil(self):
-        
+    def calculate_poh(self):
+
         el = ['01','02','03','04','05','07','10','12','15']
         H = []
         for f in el:
@@ -302,7 +301,29 @@ class Radar:
 
         VIL[VIL == 0] = np.nan
 
-        return VIL
+        echotop = np.empty([240, 360])
+        for i in range(240):
+            for j in range(360):
+                for k in range(6)[::-1]:
+                    if not np.isnan(w[k,i,j]):
+                        psv = H[k]
+                        echotop[i,j] = psv[i,j]
+                        break
+
+        VILD = np.array([240, 360])
+        VILD = (VIL / echotop) * 1000
+
+        d4 = -0.5395
+        d3 = 1.483
+        d2 = -0.5623
+        d1 = 0.07278
+
+        POH = ((d1 * (VILD ** 3) + d2 * (VILD ** 2) + d3 * (VILD) + d4)) * 100
+        POH[POH < 0] = 0
+        POH[POH > 100] = 100
+
+        return POH
+
 
     def create_grid(self):
         '''
