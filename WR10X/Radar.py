@@ -296,11 +296,11 @@ class Radar:
 
         w = a * (Zf ** b)
 
-
         VIL = w[0,:,:]*H[0]
-    
         for k in range(1,9):
             VIL += w[k-1]*(H[k]-H[k-1]) + ((H[k]-H[k-1])*(w[k]-w[k-1]))/2
+
+        VIL[VIL == 0] = np.nan
 
         return VIL
 
