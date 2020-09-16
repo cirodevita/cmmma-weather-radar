@@ -11,33 +11,60 @@ model_lat = model['latitude'][:]
 model_lon = model['longitude'][:]
 
 CLDFRA_TOTAL_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-DAILY_RAIN_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-DELTA_RAIN_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
+DAILY_RAIN_VALUES   = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
+DELTA_RAIN_VALUES   = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
 DELTA_WDIR10_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
 DELTA_WSPD10_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-GPH500_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-GPH850_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-HOURLY_SWE_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-MCAPE_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-RH2_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-RH300_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-RH500_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-RH700_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-RH850_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-RH950_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-SLP_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-T2C_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-TC500_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-TC850_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-U10M_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-U300_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-U500_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-U700_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-U850_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-U950_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-WDIR10_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-WSPD10_VALUES  = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
+GPH500_VALUES       = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
+GPH850_VALUES       = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
+HOURLY_SWE_VALUES   = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
+MCAPE_VALUES        = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
+RH2_VALUES          = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
+RH300_VALUES        = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
+RH500_VALUES        = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
+RH700_VALUES        = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
+RH850_VALUES        = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
+RH950_VALUES        = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
+SLP_VALUES          = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
+T2C_VALUES          = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
+TC500_VALUES        = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
+TC850_VALUES        = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
+U10M_VALUES         = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
+U300_VALUES         = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
+U500_VALUES         = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
+U700_VALUES         = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
+U850_VALUES         = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
+U950_VALUES         = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
+WDIR10_VALUES       = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
+WSPD10_VALUES       = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
 
+MODEL_CLDFRA_TOTAL = model['CLDFRA_TOTAL'][::]
+MODEL_DAILY_RAIN = model['DAILY_RAIN'][::]
+MODEL_DELTA_RAIN = model['DELTA_RAIN'][::]
+MODEL_DELTA_WDIR10 = model['DELTA_WDIR10'][::]
+MODEL_DELTA_WSPD10 = model['DELTA_WSPD10'][::]
+MODEL_GPH500 = model['GPH500'][::]
+MODEL_GPH850 = model['GPH850'][::]
+MODEL_HOURLY_SWE = model['HOURLY_SWE'][::]
+MODEL_MCAPE =model['MCAPE'][::]
+MODEL_RH2 = model['RH2'][::]
+MODEL_RH300 = model['RH300'][::]
+MODEL_RH500 = model['RH500'][::]
+MODEL_RH700 = model['RH700'][::]
+MODEL_RH850 = model['RH850'][::]
+MODEL_RH950 = model['RH950'][::]
+MODEL_SLP = model['SLP'][::]
+MODEL_T2C = model['T2C'][::]
+MODEL_TC500 = model['TC500'][::]
+MODEL_TC850 = model['TC850'][::]
+MODEL_U10M = model['U10M'][::]
+MODEL_U300 = model['U300'][::]
+MODEL_U500 = model['U500'][::]
+MODEL_U700 = model['U700'][::]
+MODEL_U850 = model['U850'][::]
+MODEL_U950 = model['U950'][::]
+MODEL_WDIR10 = model['WDIR10'][::]
+MODEL_WSPD10 = model['WSPD10'][::]
 
 for i in range(len(scan_lat)):
     for j in range(len(scan_lon)):
@@ -59,33 +86,35 @@ for i in range(len(scan_lat)):
         opt_j = (np.abs(model_lon-_lon)).argmin()
 
 
-        CLDFRA_TOTAL_VALUES[i,j] = model['CLDFRA_TOTAL'][0,opt_i,opt_j]
-        DAILY_RAIN_VALUES[i,j] = model['DAILY_RAIN'][0,opt_i,opt_j]
-        DELTA_RAIN_VALUES[i,j] = model['DELTA_RAIN'][0,opt_i,opt_j]
-        DELTA_WDIR10_VALUES[i,j] = model['DELTA_WDIR10'][0,opt_i,opt_j]
-        DELTA_WSPD10_VALUES[i,j] = model['DELTA_WSPD10'][0,opt_i,opt_j]
-        GPH500_VALUES[i,j] = model['GPH500'][0,opt_i,opt_j]
-        GPH850_VALUES[i,j] = model['GPH850'][0,opt_i,opt_j]
-        HOURLY_SWE_VALUES[i,j] = model['HOURLY_SWE'][0,opt_i,opt_j]
-        MCAPE_VALUES[i,j] = model['MCAPE'][0,opt_i,opt_j]
-        RH2_VALUES[i,j] = model['RH2'][0,opt_i,opt_j]
-        RH300_VALUES[i,j] = model['RH300'][0,opt_i,opt_j]
-        RH500_VALUES[i,j] = model['RH500'][0,opt_i,opt_j]
-        RH700_VALUES[i,j] = model['RH700'][0,opt_i,opt_j]
-        RH850_VALUES[i,j] = model['RH850'][0,opt_i,opt_j]
-        RH950_VALUES[i,j] = model['RH950'][0,opt_i,opt_j]
-        SLP_VALUES[i,j] = model['SLP'][0,opt_i,opt_j]
-        T2C_VALUES[i,j] = model['T2C'][0,opt_i,opt_j]
-        TC500_VALUES[i,j] = model['TC500'][0,opt_i,opt_j]
-        TC850_VALUES[i,j] = model['TC850'][0,opt_i,opt_j]
-        U10M_VALUES[i,j] = model['U10M'][0,opt_i,opt_j]
-        U300_VALUES[i,j] = model['U300'][0,opt_i,opt_j]
-        U500_VALUES[i,j] = model['U500'][0,opt_i,opt_j]
-        U700_VALUES[i,j] = model['U700'][0,opt_i,opt_j]
-        U850_VALUES[i,j] = model['U850'][0,opt_i,opt_j]
-        U950_VALUES[i,j] = model['U950'][0,opt_i,opt_j]
-        WDIR10_VALUES[i,j] = model['WDIR10'][0,opt_i,opt_j]
-        WSPD10_VALUES[i,j] = model['WSPD10'][0,opt_i,opt_j]
+        CLDFRA_TOTAL_VALUES[i,j] = MODEL_CLDFRA_TOTAL[0,opt_i,opt_j]
+        DAILY_RAIN_VALUES[i,j] = MODEL_DAILY_RAIN[0,opt_i,opt_j]
+        DELTA_RAIN_VALUES[i,j] = MODEL_DELTA_RAIN[0,opt_i,opt_j]
+        DELTA_WDIR10_VALUES[i,j] = MODEL_DELTA_WDIR10[0,opt_i,opt_j]
+        DELTA_WSPD10_VALUES[i,j] = MODEL_DELTA_WSPD10[0,opt_i,opt_j]
+        GPH500_VALUES[i,j] = MODEL_GPH500[0,opt_i,opt_j]
+        GPH850_VALUES[i,j] = MODEL_GPH850[0,opt_i,opt_j]
+        HOURLY_SWE_VALUES[i,j] = MODEL_HOURLY_SWE[0,opt_i,opt_j]
+        MCAPE_VALUES[i,j] = MODEL_MCAPE[0,opt_i,opt_j]
+        RH2_VALUES[i,j] = MODEL_RH2[0,opt_i,opt_j]
+        RH300_VALUES[i,j] = MODEL_RH300[0,opt_i,opt_j]
+        RH500_VALUES[i,j] = MODEL_RH500[0,opt_i,opt_j]
+        RH700_VALUES[i,j] = MODEL_RH700[0,opt_i,opt_j]
+        RH850_VALUES[i,j] = MODEL_RH850[0,opt_i,opt_j]
+        RH950_VALUES[i,j] = MODEL_RH950[0,opt_i,opt_j]
+        SLP_VALUES[i,j] = MODEL_SLP[0,opt_i,opt_j]
+        T2C_VALUES[i,j] = MODEL_T2C[0,opt_i,opt_j]
+        TC500_VALUES[i,j] = MODEL_TC500[0,opt_i,opt_j]
+        TC850_VALUES[i,j] = MODEL_TC850[0,opt_i,opt_j]
+        U10M_VALUES[i,j] = MODEL_U10M[0,opt_i,opt_j]
+        U300_VALUES[i,j] = MODEL_U300[0,opt_i,opt_j]
+        U500_VALUES[i,j] = MODEL_U500[0,opt_i,opt_j]
+        U700_VALUES[i,j] = MODEL_U700[0,opt_i,opt_j]
+        U850_VALUES[i,j] = MODEL_U850[0,opt_i,opt_j]
+        U950_VALUES[i,j] = MODEL_U950[0,opt_i,opt_j]
+        WDIR10_VALUES[i,j] = MODEL_WDIR10[0,opt_i,opt_j]
+        WSPD10_VALUES[i,j] = MODEL_WSPD10[0,opt_i,opt_j]
+
+        print(f'{i} {j}')
 
 
 
@@ -100,7 +129,6 @@ lats._CoordinateAxisType = 'Lat'
 lons = aggregated_file.createVariable('lon', 'f4', ('X','Y'))
 lons.units = 'degree_east'
 lons._CoordinateAxisType = 'Lon'
-
 
 
 CLDFRA_TOTAL = aggregated_file.createVariable('HGT', 'f4', ('X','Y'),fill_value=-999)
