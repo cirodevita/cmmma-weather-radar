@@ -11,6 +11,9 @@ warnings.filterwarnings('ignore')
 np.set_printoptions(threshold=sys.maxsize)
 
 
+required_levels = ['01','02','03','04']
+
+
 class Radar:
     def __init__(self, radar_config_file_path, scan_data):
         with open(radar_config_file_path) as f:
@@ -24,13 +27,16 @@ class Radar:
 
         self._data = self.read_ppi_z_files()
 
+        if not set(required_levels).issubset(set(self._data.keys())):
+            raise NameError('Invalid scan')
+      
         self.apply_statistical_filter()
         if self._config_file['sea_clutter'] is not None:
             self.remove_sea_clutter()
         if self._config_file['com_map_path'] is not None:
             self.beam_blocking()
 
-        self.apply_attenuation()
+        #self.apply_attenuation()
 
         self.create_grid()
 
@@ -213,7 +219,9 @@ class Radar:
         a = 128.3
         b = 1.67
         vmi = self.calculate_vmi()
-        return pow(pow(10, vmi/10)/a, 1/b)
+        #return pow(pow(10, vmi/10)/a, 1/b)
+        # Marshall Palmer
+        return ((10**(vmi/10))/200)**(5/8)
 
     def calculate_poh(self):
 
