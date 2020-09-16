@@ -69,14 +69,7 @@ Where:
 
 The tool directory contains a set of scripts.
 
-##### radar_to_plot.py
-Produce a plot and save it as an image of a given radar scan.
-##### radar_to_netcdf.py
-Produce a netcdf4 file from a given radar scan.
-##### radar_composite_netcdf.py
-Compose a netcdf4 from a given k radar scans.
-##### netcdf4-aggregator.py
-Aggregates the radar scans made in one hour.
+W.I.P.
 
 You can run a script with the following command
 ```console
