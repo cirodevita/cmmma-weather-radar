@@ -4,3 +4,6 @@ matplotlib==3.2.2
 netCDF4==1.5.4
 pandas==1.1.2
 xarray==0.16.0
+pyunpack==0.2.1
+patool==1.12
+
