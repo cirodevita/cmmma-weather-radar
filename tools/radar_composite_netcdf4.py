@@ -109,34 +109,40 @@ def bulk_compose():
     radar_na_config = '../data/NA/radar_config.json'
     radar_av_config = '../data/AV/radar_config.json'
 
+    day = '01'
+
     av_data = '../data/AV/data/'
     na_data = '../data/NA/data/'
     
-    scans_av = os.listdir(av_data)
-    scans_na = os.listdir(na_data)
-    scans = os.listdir(na_data)
-    scans = [value for value in scans_av if value in scans_na]
+    scans_av = os.listdir(os.path.join(av_data,day))
+    scans_na = os.listdir(os.path.join(na_data,day))
+    
+    #scans = os.listdir(na_data)
+    scans = [s for s in scans_av if s in scans_na]
 
-    path_output = os.path.join('NETCDF_DATA')
-   
+    if not os.path.exists('COMPOSED'):
+        os.mkdir('COMPOSED')
+
+    if not os.path.exists(os.path.join('COMPOSED',day)):
+        os.mkdir(os.path.join('COMPOSED',day))
+
+
     for scan in scans:
         try:
             print(f'Composing for {scan}...',end='')
 
             radars = []
-            scan = os.path.join(scan);
+            scan = os.path.join(day,scan);
             radars.append(Radar(radar_na_config,scan))
             radars.append(Radar(radar_av_config,scan))
-
-
             
-            compose(radars,path_output)
+            compose(radars,os.path.join('COMPOSED',day))
 
             print('OK')
         except NameError as err:
             print(err) 
 
-    
+
 
 
 if __name__ == '__main__':
