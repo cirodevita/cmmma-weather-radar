@@ -9,19 +9,19 @@ def aggregate(path,output_path=''):
     times = []
     for f in files:
         if(f.endswith('nc')):
-            times.append(f[14:16])
+            times.append(f[17:19])
     times = set(times)
 
     for t in times:
         print(f'Aggregating scans for hour {t}...')
 
-        t_files = [s for s in files if t in s[14:16]]
+        t_files = [s for s in files if t in s[17:19]]
 
         nf = nc.Dataset(os.path.join(path,t_files[0]), 'r', format='NETCDF4')
         lat = nf['lat'][::]
         lon = nf['lon'][::]
 
-        aggregated_file = nc.Dataset(os.path.join(output_path,t_files[0][0:16])+'.nc', 'w', format='NETCDF4')
+        aggregated_file = nc.Dataset(os.path.join(output_path,t_files[0][0:19])+'.nc', 'w', format='NETCDF4')
         aggregated_file.createDimension('X' ,len(lat))
         aggregated_file.createDimension('Y', len(lon[0]))
 
@@ -104,13 +104,22 @@ def aggregate(path,output_path=''):
         print("OK")
 
 
-
-   
-
-
 if __name__ == '__main__':
 
-    day = '31'
-    path = os.path.join('NETCDF_DATA')
-    output_path = os.path.join('test')
-    aggregate(path,output_path)
+    days = os.listdir('COMPOSED')
+    
+    
+    if not os.path.exists('STACKED'):
+        os.mkdir('STACKED')
+
+
+    for day in days:
+        print(f'Stacking for {day}')
+        path = os.path.join('COMPOSED',day)
+
+        output_dir = os.path.join('STACKED',day)
+
+        if not os.path.exists(output_dir):
+            os.mkdir(output_dir)
+
+        aggregate(path,output_dir)
