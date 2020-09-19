@@ -227,7 +227,7 @@ if __name__ == '__main__':
                 hh = scan[17:19]
                 wrf_url_nc = build_url(yyyy,mm,dd,hh)
                 scan_path = os.path.join(input_dir,dd,scan)
-                print(f'Getting data for {scan}',end='')
+                print(f'Getting data for {scan}...',end='')
                 model,radar_scan = read_netcdf4_files(wrf_url_nc,scan_path)
                 regridding(model,radar_scan,os.path.join(output_dir,scan))
                 print('OK')
