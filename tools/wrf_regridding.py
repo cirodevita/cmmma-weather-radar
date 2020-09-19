@@ -212,15 +212,12 @@ if __name__ == '__main__':
 
     days = os.listdir(input_dir)
 
-    test_wrf = 'http://193.205.230.6:8080/opendap/opendap/wrf5/d03/archive/2020/06/01/wrf5_d03_20200601Z0000.nc'
-    test_scan = 'STACKED/01/NA_AV_2020-06-01 00.nc'
-    scan = 'NA_AV_2020-06-01 00.nc'
-
-    model,radar_scan = read_netcdf4_files(test_wrf,test_scan)
-    regridding(model,radar_scan,os.path.join(output_dir,scan))
-
+    #test_wrf = 'http://193.205.230.6:8080/opendap/opendap/wrf5/d03/archive/2020/06/01/wrf5_d03_20200601Z0000.nc'
+    #test_scan = 'STACKED/01/NA_AV_2020-06-01 00.nc'
+    #scan = 'NA_AV_2020-06-01 00.nc'
+    #model,radar_scan = read_netcdf4_files(test_wrf,test_scan)
+    #regridding(model,radar_scan,os.path.join(output_dir,scan))
         
-    '''
     for dd in days:
        scans = os.listdir(os.path.join(input_dir,dd))
        if scans:
@@ -230,7 +227,12 @@ if __name__ == '__main__':
                 hh = scan[17:19]
                 wrf_url_nc = build_url(yyyy,mm,dd,hh)
                 scan_path = os.path.join(input_dir,dd,scan)
-    '''       
+                print(f'Getting data for {scan}',end='')
+                model,radar_scan = read_netcdf4_files(wrf_url_nc,scan_path)
+                regridding(model,radar_scan,os.path.join(output_dir,scan))
+                print('OK')
+
+    
 
 
 
