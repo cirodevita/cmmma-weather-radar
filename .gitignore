@@ -130,3 +130,6 @@ dmypy.json
 
 
 data/
+tools/STACKED
+tools/COMPOSED
+tools/NETCDF4_DATASET
