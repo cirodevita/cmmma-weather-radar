@@ -14,22 +14,31 @@ def radar_to_netcdf4(R,output_dir=''):
 
         grid_dim = 480
 
-        grid_lat = np.arange(R.latmin,R.latmax,(R.latmax-R.latmin)/grid_dim)
-        grid_lon = np.arange(R.lonmin,R.lonmax,(R.lonmax-R.lonmin)/grid_dim)
+        step_lat = (R.latmax-R.latmin)/grid_dim
+        step_lon = (R.lonmax-R.lonmin)/grid_dim
+
+        grid_lat = np.arange(R.latmin,R.latmax,step_lat)
+        grid_lon = np.arange(R.lonmin,R.lonmax,step_lon)
 
         vmi = R.calculate_vmi()
-        poh = R.calculate_poh()
+        #poh = R.calculate_poh()
         rainrate = R.calculate_rain_rate()
 
-        grid_vmi = np.full([grid_dim,grid_dim],-999)
-        grid_poh = np.full([grid_dim,grid_dim],-999)
-        grid_rr  = np.full([grid_dim,grid_dim],-999)
+        grid_vmi = np.full([grid_dim,grid_dim],-999,dtype=np.float32)
+        #grid_poh = np.full([grid_dim,grid_dim],-999,dtype=np.float32)
+        grid_rr  = np.full([grid_dim,grid_dim],-999,dtype=np.float32)
 
         lat0 = R._location[0]
         lon0 = R._location[1]
-
+        '''
         offset_j = np.abs(grid_lon-lon0).argmin()
         offset_i = np.abs(grid_lat-lat0).argmin()
+        '''
+        offset_j = 240
+        offset_i = 240
+
+        print(offset_i)
+        print(offset_j)
 
         for j in range(1,len(grid_lat)):
             for i in range(1,len(grid_lon)):
@@ -37,19 +46,25 @@ def radar_to_netcdf4(R,output_dir=''):
                 y = j-offset_j
                 r = np.sqrt(x**2+y**2)
                 t = np.arctan2(y, x)
+                
                 t = t * 180 / np.pi
      
                 if np.isnan(t):
                     continue
             
-                r = int(r)
-                t = int(t)
+                t = int(np.around(t, decimals=0))
+                r = int(np.around(r, decimals=0))
 
-                if(r < 240):      
+                t -= 1
+
+                if(r < 240):    
+                    #grid_vmi[i,j] = 100  
                     if not np.isnan(vmi[r,t]):
                         grid_vmi[i,j] = np.round(vmi[r,t])
+                    '''
                     if not np.isnan(poh[r,t]):
                         grid_poh[i,j] = np.round(poh[r,t])
+                    '''
                     if not np.isnan(rainrate[r,t]):
                         grid_rr[i,j] = np.round(rainrate[r,t])
                     
@@ -73,13 +88,13 @@ def radar_to_netcdf4(R,output_dir=''):
         lons.units = 'degree_east'
         lons._CoordinateAxisType = 'Lon'
 
-        reflectivity = ds.createVariable('reflectivity', 'i', ('X','Y'),fill_value=-999)
-        rain_rate    = ds.createVariable('rain_rate','i',('X','Y'),fill_value=-999)
-        poh          = ds.createVariable('poh','i',('X','Y'),fill_value=-999)
+        reflectivity = ds.createVariable('reflectivity', 'f4', ('X','Y'),fill_value=-999)
+        rain_rate    = ds.createVariable('rain_rate','f4',('X','Y'),fill_value=-999)
+        #poh          = ds.createVariable('poh','i',('X','Y'),fill_value=-999)
 
         reflectivity[:] = grid_vmi
         rain_rate[:] = grid_rr
-        poh[:] = grid_poh
+        #poh[:] = grid_poh
         lats[::] = grid_lat
         lons[::] = grid_lon
 
@@ -89,7 +104,7 @@ def radar_to_netcdf4(R,output_dir=''):
 if __name__ == '__main__':
 
     radar_config_path = '../data/NA/radar_config.json'
-    scan_data = 'A00-202006051030'
+    scan_data = '09/A00-201911092220'
 
     print("Reading data...")
     R = Radar(radar_config_path,scan_data)
