@@ -80,14 +80,3 @@ class WR10X_bin_coverter:
         scan_data['ndata'] = self._ndata
     
         return scan_data
-
-
-if __name__ == '__main__':
-
-    dir = '/mnt/c/Users/Maimba/Desktop/TEST_OUTPUT/01/A00-202009010000'
-    converter = WR10X_bin_coverter(dir)
-
-    data = converter.get_radar_data()
-    scan = converter.get_scan_data()
-    print(scan)
-    

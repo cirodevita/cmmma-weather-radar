@@ -29,14 +29,13 @@ class Radar:
             raise NameError('Invalid scan')
         
         self.apply_statistical_filter()
-        '''
+ 
         if self._config_file['sea_clutter'] is not None:
             self.remove_sea_clutter()
         if self._config_file['com_map_path'] is not None:
             self.beam_blocking()
-        '''
-        #self.apply_attenuation()
         
+        self.apply_attenuation()
         self.create_grid()
 
     def __str__(self):
@@ -267,14 +266,3 @@ class Radar:
         self.latmax = np.nanmax(self.lat)
         self.lonmin = np.nanmin(self.lon) - 0.02
         self.lonmax = np.nanmax(self.lon) + 0.02
-
-
-if __name__ == '__main__':
-
-    radar_config_path = '../data/NA/radar_config.json'
-    data = '/mnt/c/Users/Maimba/Desktop/TEST_OUTPUT/01/A00-202009010000'
-
-    R = Radar(radar_config_path,data)
-
-    print(R)
-
