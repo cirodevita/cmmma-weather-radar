@@ -1,9 +1,11 @@
+import sys
 import os
 from pyunpack import Archive
 
 '''
     Questo script prende in input una directory contentente gli archivi cab e 
-    li estrare in un output directory con lo stesso nome dell'archivio.
+    li estrare in un output directory con lo stesso nome dell'archivio facendo 
+    automaticamente la divisione in giorni.
 '''
 
 def unzipfile(filename,destfolder):
@@ -32,10 +34,14 @@ def bulk_unzip(input_path,output_path):
 
 if __name__ == '__main__':
 
-    input_path = '/mnt/c/Users/Maimba/Desktop/RAW_GIUGNO_AV'
-    output_path = '/mnt/c/Users/Maimba/Desktop/cmmma-weather-radar/data/AV/data'
-   
-    bulk_unzip(input_path,output_path)
+    if len(sys.argv) < 3:
+        print(f'usage: {sys.argv[0]} <input directory path> <output directory path> ')
+        exit(-1)
+
+    print(f'Input path: {sys.argv[1]}')
+    print(f'Input output: {sys.argv[2]}')
+
+    bulk_unzip(sys.argv[1],sys.argv[2])
 
 
 
