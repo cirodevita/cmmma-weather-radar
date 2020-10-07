@@ -6,6 +6,11 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 from WR10X.Radar import Radar
 
+'''
+    Dato un radar questo script produce una mappa in formato jpg che contiene un indice.
+    E' possibile mostrare solo un indice per mappa.
+'''
+
 def generate_plot(R,data,clevs=None,output_dir=''):
     t = np.array([np.arange(-np.pi, np.pi, 0.001)])
 
@@ -42,17 +47,33 @@ def generate_plot(R,data,clevs=None,output_dir=''):
 
 if __name__ == '__main__':
 
-    radar_config_path = '../data/NA/radar_config.json'
-    scan_data = 'A00-202006051030'
+    radar_config_path = '' # Path file configurazione del radar
+    scan_data = ''         # Path dati relativi alla scansione da considerare
+    output_dir = ''        # Path output dell'immagine
+    
+    # Da linea di comando
+    if radar_config_path == '' or scan_data == '':
+        if len(sys.argv) < 3:
+            print(f'usage: {sys.argv[0]} <radar config file> <scan data directory> [<output map directory>] ')
+            exit(-1)
 
-    #clevs = [0.2,0.4,0.6,0.8,1,1.2,1.4,1.6,1.8,2.0]
+        radar_config_path = sys.argv[1]
+        scan_data = sys.argv[2]
+
+        if len(sys.argv) >= 4:
+            output_dir = sys.argv[3]
+
     clevs=[0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60]
-    #clevs=[0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30]
     
     print("Reading data...")
-    R = Radar(radar_config_path,scan_data)
-    print(R)
-    print("Saving data as plot...")
-    data = R.calculate_vmi()
-    generate_plot(R,data,clevs)
-    print("OK")
+
+    try:
+        R = Radar(radar_config_path,scan_data)
+        print(R)
+        print("Saving data as plot...")
+        data = R.calculate_vmi()
+        generate_plot(R,data,clevs)
+        print("OK")
+    except NameError as err:
+        print(err) 
+    
