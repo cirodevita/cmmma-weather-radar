@@ -1,18 +1,16 @@
 import os
 import sys
-import struct
 import json
 import warnings
 from datetime import datetime
 from .utils.statistical_filter import StatisticalFilter
+from .wr10x_data_adapter import WR10X_bin_coverter
 import numpy as np
 
 warnings.filterwarnings('ignore')
 np.set_printoptions(threshold=sys.maxsize)
 
-
 required_levels = ['01','02','03','04']
-
 
 class Radar:
     def __init__(self, radar_config_file_path, scan_data):
@@ -25,19 +23,20 @@ class Radar:
         self._dir_data = os.path.join(config_file['dir_data'], scan_data)
         self._config_file = config_file
 
-        self._data = self.read_ppi_z_files()
-
+        self.read_ppi_z_files(self._dir_data)
+        
         if not set(required_levels).issubset(set(self._data.keys())):
             raise NameError('Invalid scan')
-      
+        
         self.apply_statistical_filter()
+        '''
         if self._config_file['sea_clutter'] is not None:
             self.remove_sea_clutter()
         if self._config_file['com_map_path'] is not None:
             self.beam_blocking()
-
+        '''
         #self.apply_attenuation()
-
+        
         self.create_grid()
 
     def __str__(self):
@@ -47,56 +46,25 @@ class Radar:
         return (f'Scan id: {self._scan_id}\n'
                 f'Name: {self._scan_name}\n'
                 f'Data: {self._scan_datestamp}\n'
-                f'Directory data: {self._dir_data}\n'
+                f'Data directory: {self._dir_data}\n'
                 f'Location (lat,lon): {self._location[0]} {self._location[1]}\n'
                 f'Range (km): {self._range}\n'
                 f'Resolution (m): {self._resolution}\n'
                 f'Beam per azimut: {self._ndata}')
-
-    def read_ppi_z_files(self):
-        # Read scan data binaries and parse it.
-        files = os.listdir(os.path.join(self._dir_data))
-        # Search for .Scan file
-        self._scan_name = ''.join([f for f in files if f.endswith(('.Scan'))])
-        if not self._scan_name:
-            raise FileNotFoundError
-        # Read scan_ID
-        with open(os.path.join(self._dir_data, self._scan_name), 'r') as sf:
-            self._scan_id = sf.read().strip()
-        # Scan data
-        self._scan_datestamp = datetime.strptime(self._scan_name[4:16], '%Y%m%d%H%M')
-        # Read binaries files
-        bins = [f for f in files if f.endswith('-C.z') and f.startswith('PPI')]
-        raw_bytes = {}
-        for f in bins:
-            el = f[39:41]
-            with open(os.path.join(self._dir_data, f), 'rb') as file:
-                raw_bytes[el] = file.read()
-        # Radar range (km)
-        self._range = int(f[23:27])/10
-        # Radar resolution (m)
-        self._resolution = int(f[28:32])
-        # Bin per beam
-        self._ndata = int(self._range*1000 / self._resolution)
-        # Unpack data in 16 bytes (ushort) for group using little endian
-        upck_bytes = {}
-        for el in raw_bytes:
-            upck_bytes[el] = struct.unpack('<' + str(len(raw_bytes[el]) // 2) + "H", raw_bytes[el])
-            # Data reshape
-            header_size = upck_bytes[el][0]
-            upck_bytes[el] = np.reshape(upck_bytes[el], (self._ndata+header_size, 360), 'F')
-            upck_bytes[el] = upck_bytes[el].astype('float32')
-            # Converts data in dBZ (From WR10X doc)
-            data_format = upck_bytes[el][header_size-1]
-            q_Z2Level = (pow(2, data_format)-1)*(-(-32)/(95.5-(-32)))
-            m_Z2Level = (pow(2, data_format)-1)/(95.5-(-32))
-            upck_bytes[el] = (upck_bytes[el]-q_Z2Level)/m_Z2Level
-            # Delete headers
-            upck_bytes[el] = upck_bytes[el][header_size:]
-            upck_bytes[el][(upck_bytes[el] > 55)] = 55
-
-        return upck_bytes
-
+    
+    def read_ppi_z_files(self,bin_dir):
+        converter = WR10X_bin_coverter(bin_dir)
+        # Get scan data
+        self._data = converter.get_radar_data()
+        # Get scan metadata
+        scan_metadata = converter.get_scan_data()
+        self._scan_id        = scan_metadata['id']
+        self._scan_name      = scan_metadata['name']
+        self._scan_datestamp = scan_metadata['datestamp']
+        self._range          = scan_metadata['range']
+        self._resolution     = scan_metadata['resolution']
+        self._ndata          = scan_metadata['ndata']
+    
     def apply_statistical_filter(self):
         # Converts dictionaries in lists
         data_mappe = []
@@ -106,7 +74,7 @@ class Radar:
         # Reads threshold values
         Etn_Th = self._config_file['statistical_filter']['Etn_Th']
         Txt_Th = self._config_file['statistical_filter']['Txt_Th']
-        Z_Th = self._config_file['statistical_filter']['Z_Th']
+        Z_Th   = self._config_file['statistical_filter']['Z_Th']
 
         d_filt1 = StatisticalFilter(data, Etn_Th, Txt_Th, Z_Th)
         # Decompose data
@@ -219,9 +187,9 @@ class Radar:
         a = 128.3
         b = 1.67
         vmi = self.calculate_vmi()
-        #return pow(pow(10, vmi/10)/a, 1/b)
+        return pow(pow(10, vmi/10)/a, 1/b)
         # Marshall Palmer
-        return ((10**(vmi/10))/200)**(5/8)
+        #return ((10**(vmi/10))/200)**(5/8)
 
     def calculate_poh(self):
 
@@ -299,3 +267,14 @@ class Radar:
         self.latmax = np.nanmax(self.lat)
         self.lonmin = np.nanmin(self.lon) - 0.02
         self.lonmax = np.nanmax(self.lon) + 0.02
+
+
+if __name__ == '__main__':
+
+    radar_config_path = '../data/NA/radar_config.json'
+    data = '/mnt/c/Users/Maimba/Desktop/TEST_OUTPUT/01/A00-202009010000'
+
+    R = Radar(radar_config_path,data)
+
+    print(R)
+
