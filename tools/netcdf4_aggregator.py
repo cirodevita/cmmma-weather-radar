@@ -16,7 +16,7 @@ def aggregate(path,output_path=''):
         print(f'Aggregating scans for hour {t}...')
 
         t_files = [s for s in files if t in s[17:19]]
-
+        
         nf = nc.Dataset(os.path.join(path,t_files[0]), 'r', format='NETCDF4')
         lat = nf['lat'][::]
         lon = nf['lon'][::]
@@ -33,10 +33,9 @@ def aggregate(path,output_path=''):
         lons.units = 'degree_east'
         lons._CoordinateAxisType = 'Lon'
 
-        reflectivity = aggregated_file.createVariable('reflectivity', 'i', ('X','Y'),fill_value=-999)
-        rain_rate    = aggregated_file.createVariable('rain_rate','i',('X','Y'),fill_value=-999)
+        reflectivity = aggregated_file.createVariable('reflectivity', 'i', ('X','Y'),fill_value=-99.0)
+        rain_rate    = aggregated_file.createVariable('rain_rate','i',('X','Y'),fill_value=-99.0)
         #poh_rate    = aggregated_file.createVariable('poh','i',('X','Y'),fill_value=-999)
-
 
         lats[::] = lat
         lons[::] = lon
@@ -52,22 +51,22 @@ def aggregate(path,output_path=''):
 
         # Calculte mean
         
-        mean_vmi =  grid = np.full([len(lat),len(lon[0])],-999,dtype=np.float32)
-        mean_rr  =  grid = np.full([len(lat),len(lon[0])],-999,dtype=np.float32)
-        mean_poh =  grid = np.full([len(lat),len(lon[0])],-999,dtype=np.float32)
+        mean_vmi =  grid = np.full([len(lat),len(lon[0])],-99.0,dtype=np.float32)
+        mean_rr  =  grid = np.full([len(lat),len(lon[0])],-99.0,dtype=np.float32)
+        mean_poh =  grid = np.full([len(lat),len(lon[0])],-99.0,dtype=np.float32)
 
         for i in range(len(mean_vmi)):
             for j in range(len(mean_vmi[0])):
 
                 for d in vmi:
-                    if (d[i,j] != -999):
-                        if mean_vmi[i,j] == -999:
+                    if (d[i,j] != -99.0):
+                        if mean_vmi[i,j] == -99.0:
                             mean_vmi[i,j] = d[i,j]
                         else:
                             mean_vmi[i,j] += d[i,j]
                 for d in rr:
-                    if (d[i,j] != -999):
-                        if mean_rr[i,j] == -999:
+                    if (d[i,j] != -99.0):
+                        if mean_rr[i,j] == -99.0:
                             mean_rr[i,j] = d[i,j]
                         else:
                             mean_rr[i,j] += d[i,j]
@@ -79,20 +78,19 @@ def aggregate(path,output_path=''):
                         else:
                             mean_poh[i,j] += d[i,j]
                 '''
-        '''
+        
         for i in range(len(mean_vmi)):
             for j in range(len(mean_vmi[0])):
 
-                if mean_vmi[i,j] != -999:
+                if mean_vmi[i,j] != -99.0:
                     mean_vmi[i,j] /= len(vmi)
-
+                '''
                 if mean_rr[i,j] != -999:
                     mean_rr[i,j] /= len(rr)
           
                 if mean_poh[i,j] != -999:
                     mean_poh[i,j] /= len(poh)
-           
-        '''
+                '''
         
         
         reflectivity[::] = mean_vmi
@@ -106,20 +104,25 @@ def aggregate(path,output_path=''):
 
 if __name__ == '__main__':
 
-    days = os.listdir('COMPOSED')
-    
-    
-    if not os.path.exists('STACKED'):
-        os.mkdir('STACKED')
+    input_dir = 'COMPOSED'
+    output_dir = 'STACKED'
 
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
 
+    if not os.path.exists(os.path.join(output_dir)):
+        os.mkdir(os.path.join(output_dir))
+
+    days = os.listdir(input_dir)
+
+    #aggregate(os.path.join('SCAN_NETCDF4'),'STACKED')
+  
     for day in days:
-        print(f'Stacking for {day}')
-        path = os.path.join('COMPOSED',day)
 
-        output_dir = os.path.join('STACKED',day)
+        path = os.path.join(input_dir,day)
 
-        if not os.path.exists(output_dir):
-            os.mkdir(output_dir)
+        os.mkdir(os.path.join(output_dir,day))
+        out = os.path.join(output_dir,day)
 
-        aggregate(path,output_dir)
+        aggregate(path,out)
+    

@@ -22,14 +22,14 @@ def compose(radars,output_dir=''):
     lonmin = np.min(radar_area_lon)
     lonmax = np.max(radar_area_lon)
 
-    lat_dim = 600
-    lon_dim = 750
+    lat_dim = 490
+    lon_dim = 500
     grid_lat = np.arange(latmin,latmax,(latmax-latmin)/lat_dim)
     grid_lon = np.arange(lonmin,lonmax,(lonmax-lonmin)/lon_dim)
 
-    grid_vmi = np.full([lat_dim,lon_dim],-999,dtype=np.float32)
+    grid_vmi = np.full([lat_dim,lon_dim],-99.0,dtype=np.float32)
     #grid_poh = np.full([lat_dim,lon_dim],-999)
-    grid_rr  = np.full([lat_dim,lon_dim],-999,dtype=np.float32)
+    grid_rr  = np.full([lat_dim,lon_dim],-99.0,dtype=np.float32)
 
     for R in radars:
 
@@ -41,8 +41,6 @@ def compose(radars,output_dir=''):
 
         offset_j = np.abs(grid_lon-lon0).argmin()
         offset_i = np.abs(grid_lat-lat0).argmin()
-
-
 
         for j in range(1,lon_dim):
             for i in range(1,lat_dim):
@@ -90,8 +88,8 @@ def compose(radars,output_dir=''):
     lons._CoordinateAxisType = 'Lon'
 
    
-    reflectivity = ds.createVariable('reflectivity', 'f4', ('X','Y'),fill_value=-999)
-    rain_rate    = ds.createVariable('rain_rate','f4',('X','Y'),fill_value=-999)
+    reflectivity = ds.createVariable('reflectivity', 'f4', ('X','Y'),fill_value=-99.0)
+    rain_rate    = ds.createVariable('rain_rate','f4',('X','Y'),fill_value=-99.0)
     #poh          = ds.createVariable('poh','i',('X','Y'),fill_value=-999)
 
 
@@ -104,66 +102,38 @@ def compose(radars,output_dir=''):
     ds.close()
 
 
-def bulk_compose():
+if __name__ == '__main__':
 
+    output_dir = 'COMPOSED'
+    
     radar_na_config = '../data/NA/radar_config.json'
     radar_av_config = '../data/AV/radar_config.json'
-
-    day = '01'
 
     av_data = '../data/AV/data/'
     na_data = '../data/NA/data/'
-    
+
+    day = '07'
+
     scans_av = os.listdir(os.path.join(av_data,day))
     scans_na = os.listdir(os.path.join(na_data,day))
-    
-    #scans = os.listdir(na_data)
+    # Get common scans
     scans = [s for s in scans_av if s in scans_na]
 
-    if not os.path.exists('COMPOSED'):
-        os.mkdir('COMPOSED')
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
 
-    if not os.path.exists(os.path.join('COMPOSED',day)):
-        os.mkdir(os.path.join('COMPOSED',day))
+    if not os.path.exists(os.path.join(output_dir,day)):
+        os.mkdir(os.path.join(output_dir,day))
 
 
-    for scan in scans:
+    for s in scans:
+        print(f'Composing for {s}...')
         try:
-            print(f'Composing for {scan}...',end='')
-
             radars = []
-            scan = os.path.join(day,scan);
-            radars.append(Radar(radar_na_config,scan))
-            radars.append(Radar(radar_av_config,scan))
-            
-            compose(radars,os.path.join('COMPOSED',day))
-
-            print('OK')
+            radars.append(Radar(radar_na_config,os.path.join(day,s)))
+            radars.append(Radar(radar_av_config,os.path.join(day,s)))
+  
+            compose(radars,os.path.join(output_dir,day))
         except NameError as err:
             print(err) 
-
-
-
-
-if __name__ == '__main__':
-
-    # Composing for a single Scan
-    '''
-    radar_na_config = '../data/NA/radar_config.json'
-    radar_av_config = '../data/AV/radar_config.json'
-
-   
-    scan_data = 'A00-202006051030'
-
-    radars = []
-    radars.append(Radar(radar_na_config,scan_data))
-    radars.append(Radar(radar_av_config,scan_data))
-
-    print(f'Composing {scan_data} radar scan..')
-    compose(radars)
-    print('OK')
-    '''
-    # Bulk compose
-    bulk_compose()
-
 
