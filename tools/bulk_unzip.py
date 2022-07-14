@@ -2,34 +2,36 @@ import sys
 import os
 from pyunpack import Archive
 
-'''
-    Questo script prende in input una directory contentente gli archivi cab e 
-    li estrare in un output directory con lo stesso nome dell'archivio facendo 
-    automaticamente la divisione in giorni.
-'''
 
-def unzipfile(filename,destfolder):
-    os.mkdir(destfolder)
+def unzipFile(filename, dst_folder):
+    os.mkdir(dst_folder)
     try:
-        Archive(filename).extractall(destfolder)
-        print(f'{filename} extracted to {destfolder}')
-    except ErrorName as e:
+        Archive(filename).extractall(dst_folder)
+        print(f'{filename} extracted to {dst_folder}')
+    except Exception as e:
         print("Invalid cab file")
         print(e)
     
 
-def bulk_unzip(input_path,output_path):
+def bulkUnzip(input_path, output_path):
 
     files = os.listdir(input_path)
     for archive in files:
-        if(archive.endswith('cab')):
+        if archive.endswith('cab'):
+            year_dir = os.path.join(output_path, archive[4:8])
+            if not os.path.exists(year_dir):
+                os.makedirs(year_dir)
 
-            day_dir = os.path.join(output_path,archive[10:12])
+            month_dir = os.path.join(year_dir, archive[8:10])
+            if not os.path.exists(month_dir):
+                os.makedirs(month_dir)
+
+            day_dir = os.path.join(month_dir, archive[10:12])
             if not os.path.exists(day_dir):
                 os.makedirs(day_dir)
 
-            x = os.path.join(day_dir,archive.split('.')[0])
-            unzipfile(os.path.join(input_path,archive),x)
+            x = os.path.join(day_dir, archive.split('.')[0])
+            unzipFile(os.path.join(input_path, archive), x)
     
 
 if __name__ == '__main__':
@@ -39,9 +41,6 @@ if __name__ == '__main__':
         exit(-1)
 
     print(f'Input path: {sys.argv[1]}')
-    print(f'Input output: {sys.argv[2]}')
+    print(f'Output path: {sys.argv[2]}')
 
-    bulk_unzip(sys.argv[1],sys.argv[2])
-
-
-
+    bulkUnzip(sys.argv[1], sys.argv[2])
