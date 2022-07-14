@@ -2,15 +2,17 @@ import os
 import sys
 import json
 import warnings
-from datetime import datetime
+
 from .utils.statistical_filter import StatisticalFilter
 from .wr10x_data_adapter import WR10X_bin_coverter
 import numpy as np
 
 warnings.filterwarnings('ignore')
 np.set_printoptions(threshold=sys.maxsize)
+sys.path.append(os.getcwd())
 
-required_levels = ['01','02','03','04']
+required_levels = ['01', '02', '03', '04']
+
 
 class Radar:
     def __init__(self, radar_config_file_path, scan_data):
@@ -20,21 +22,21 @@ class Radar:
         self._id = config_file['radar_id']
         self._location = (float(config_file['radar_location'][0]), float(config_file['radar_location'][1]))
         self._kmdeg = float(config_file['kmdeg'])
-        self._dir_data = os.path.join(config_file['dir_data'], scan_data)
+        self._dir_data = scan_data
         self._config_file = config_file
 
         self.read_ppi_z_files(self._dir_data)
-        
+
         if not set(required_levels).issubset(set(self._data.keys())):
             raise NameError('Invalid scan')
-        
+
         self.apply_statistical_filter()
- 
+
         if self._config_file['sea_clutter'] is not None:
             self.remove_sea_clutter()
         if self._config_file['com_map_path'] is not None:
             self.beam_blocking()
-        
+
         self.apply_attenuation()
         self.create_grid()
 
@@ -50,20 +52,20 @@ class Radar:
                 f'Range (km): {self._range}\n'
                 f'Resolution (m): {self._resolution}\n'
                 f'Beam per azimut: {self._ndata}')
-    
-    def read_ppi_z_files(self,bin_dir):
+
+    def read_ppi_z_files(self, bin_dir):
         converter = WR10X_bin_coverter(bin_dir)
         # Get scan data
         self._data = converter.get_radar_data()
         # Get scan metadata
         scan_metadata = converter.get_scan_data()
-        self._scan_id        = scan_metadata['id']
-        self._scan_name      = scan_metadata['name']
+        self._scan_id = scan_metadata['id']
+        self._scan_name = scan_metadata['name']
         self._scan_datestamp = scan_metadata['datestamp']
-        self._range          = scan_metadata['range']
-        self._resolution     = scan_metadata['resolution']
-        self._ndata          = scan_metadata['ndata']
-    
+        self._range = scan_metadata['range']
+        self._resolution = scan_metadata['resolution']
+        self._ndata = scan_metadata['ndata']
+
     def apply_statistical_filter(self):
         # Converts dictionaries in lists
         data_mappe = []
@@ -73,7 +75,7 @@ class Radar:
         # Reads threshold values
         Etn_Th = self._config_file['statistical_filter']['Etn_Th']
         Txt_Th = self._config_file['statistical_filter']['Txt_Th']
-        Z_Th   = self._config_file['statistical_filter']['Z_Th']
+        Z_Th = self._config_file['statistical_filter']['Z_Th']
 
         d_filt1 = StatisticalFilter(data, Etn_Th, Txt_Th, Z_Th)
         # Decompose data
@@ -117,7 +119,7 @@ class Radar:
         # Read compensation maps
         MC = {}
         for f in files:
-            if(f.startswith('mc')):
+            if (f.startswith('mc')):
                 el = f.split('-')[1]
                 MC[el] = np.loadtxt(os.path.join(cm_path, f))
         # Apply the reflectivity increment
@@ -155,14 +157,14 @@ class Radar:
         for i in range(self._ndata):
             for j in range(0, 360):
                 for el in self._data:
-                    PIA[el][i, j] = A[el][i, j] + PIA[el][i-1, j]
+                    PIA[el][i, j] = A[el][i, j] + PIA[el][i - 1, j]
         for el in self._data:
             PIA[el][(PIA[el] > 10)] = 10
         # Calculate the correct reflectivity value
         for i in range(self._ndata):
             for j in range(360):
                 for el in self._data:
-                    self._data[el][i, j] = 10*np.log10(self._data[el][i][j]) + PIA[el][i, j-1] + A[el][i, j]
+                    self._data[el][i, j] = 10 * np.log10(self._data[el][i][j]) + PIA[el][i, j - 1] + A[el][i, j]
         for el in self._data:
             self._data[el][(self._data[el] < 4)] = np.nan
 
@@ -186,9 +188,9 @@ class Radar:
         a = 128.3
         b = 1.67
         vmi = self.calculate_vmi()
-        return pow(pow(10, vmi/10)/a, 1/b)
+        return pow(pow(10, vmi / 10) / a, 1 / b)
         # Marshall Palmer
-        #return ((10**(vmi/10))/200)**(5/8)
+        # return ((10**(vmi/10))/200)**(5/8)
 
     def calculate_poh(self):
 
@@ -197,8 +199,8 @@ class Radar:
         for f in el:
             H.append(np.loadtxt(os.path.join(self._config_file['H_dir'], f)))
 
-        a = 3.44 * (10**-6)
-        b = 4/7.0
+        a = 3.44 * (10 ** -6)
+        b = 4 / 7.0
 
         Zf = []
         for level in el:
@@ -209,9 +211,9 @@ class Radar:
 
         w = a * (Zf ** b)
 
-        VIL = w[0, :, :]*H[0]
+        VIL = w[0, :, :] * H[0]
         for k in range(1, 9):
-            VIL += w[k-1]*(H[k]-H[k-1]) + ((H[k]-H[k-1])*(w[k]-w[k-1]))/2
+            VIL += w[k - 1] * (H[k] - H[k - 1]) + ((H[k] - H[k - 1]) * (w[k] - w[k - 1])) / 2
 
         VIL[VIL == 0] = np.nan
 
@@ -247,12 +249,12 @@ class Radar:
 
         rkm = np.zeros(ndata)
         for j in range(ndata):
-            rkm[j] = self._range * j/ndata
+            rkm[j] = self._range * j / ndata
 
         # Angles in radians
         z = np.zeros(360)
         for i in range(360):
-            z[i] = np.pi*i/180
+            z[i] = np.pi * i / 180
 
         self.lat = np.zeros([360, ndata], float)
         self.lon = np.zeros([360, ndata], float)
@@ -260,7 +262,8 @@ class Radar:
         for j in range(ndata):
             for i in range(360):
                 self.lat[i, j] = self._location[0] + np.cos(z[i]) * rkm[j] / self._kmdeg
-                self.lon[i, j] = self._location[1] + np.sin(z[i]) * (rkm[j] / self._kmdeg) / np.cos(np.pi * self.lat[i, j] / 180.0)
+                self.lon[i, j] = self._location[1] + np.sin(z[i]) * (rkm[j] / self._kmdeg) / np.cos(
+                    np.pi * self.lat[i, j] / 180.0)
 
         self.latmin = np.nanmin(self.lat)
         self.latmax = np.nanmax(self.lat)
