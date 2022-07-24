@@ -1,43 +1,33 @@
 import os
 import xarray as xr
-import pandas as pd
-from csv import writer
-from csv import reader
+import sys
 
 
-def radar_netcdf4_to_csv(file,inputdir='',outputdir=''):
-
-    data = xr.open_dataset('TEST.nc')
+def radar_netcdf4_to_csv(file, inputdir, outputdir):
+    data = xr.open_dataset(os.path.join(inputdir, file))
     df = data.to_dataframe()
-    
-    
-    #print(df.describe())
 
     df = df.dropna(axis=1, how='all')
     df = df.dropna()
 
+    output_filename = file.split(".")[0] + ".csv"
+    df.to_csv(os.path.join(outputdir, output_filename))
 
-    output_filename = f"DATASET_2.csv"
-    df.to_csv(os.path.join(outputdir,output_filename))
 
+if __name__ == '__main__':
+    if len(sys.argv) < 3:
+        print(f'usage: {sys.argv[0]} <input directory> <output directory>')
+        exit(-1)
 
-if __name__=='__main__':
+    netcdf4_file_directory = sys.argv[1]
+    output_csv_directory = sys.argv[2]
 
-    netcdf4_file_directory = 'WRF5'
-    output_csv_directory = 'CSV'
-    
     files = os.listdir(netcdf4_file_directory)
 
-    file_num = len(files)
-    file_count = 1;
+    if not os.path.exists(output_csv_directory):
+        os.mkdir(output_csv_directory)
+
     for file in files:
-        if(file.endswith('.nc')):
-            print(f'[{file_count}/{file_num}] Processing {file}...',end='')
-            radar_netcdf4_to_csv(file,netcdf4_file_directory,output_csv_directory)
-            print('OK!')
-            file_count+=1
-
-
-
-
-
+        if file.endswith('.nc'):
+            print(f'Processing {file}...')
+            radar_netcdf4_to_csv(file, netcdf4_file_directory, output_csv_directory)

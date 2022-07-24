@@ -1,241 +1,502 @@
+import sys
+import os
 import netCDF4 as nc
 import numpy as np
-import os
+from wrf import getvar
+from shapely.geometry import Polygon
+from scipy.interpolate import griddata
 
 
-def build_url(yyyy,mm,dd,hh):
-    return f'http://193.205.230.6:8080/opendap/opendap/wrf5/d03/archive/{yyyy}/{mm}/{dd}/wrf5_d03_{yyyy}{mm}{dd}Z{hh}00.nc'
+def interp(srcLons, srcLats, invar2d, dstLons, dstLats, value):
+    py = srcLats.flatten()
+    px = srcLons.flatten()
+    z = np.array(invar2d).flatten()
+    z[z == value] = 'nan'
+    X, Y = np.meshgrid(dstLons, dstLats)
+    outvar2d = griddata((px, py), z, (X, Y), method='nearest', fill_value=value)
+    return outvar2d
 
-
-def read_netcdf4_files(wrf,scan):
-    try:
-        model = nc.Dataset(wrf)
-        radar_scan = nc.Dataset(scan,'r')
-    except OSError:
-        print("File non trovato")
-        return None,None
-    return model,radar_scan
-
-
-def regridding(model,radar_scan,output):
-    scan_lat = radar_scan['lat'][:,0]
-    scan_lon = radar_scan['lon'][0]
-
-    model_lat = model['latitude'][:]
-    model_lon = model['longitude'][:]
-
-    CLDFRA_TOTAL_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    DAILY_RAIN_VALUES   = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    DELTA_RAIN_VALUES   = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    DELTA_WDIR10_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    DELTA_WSPD10_VALUES = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    GPH500_VALUES       = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    GPH850_VALUES       = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    HOURLY_SWE_VALUES   = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    MCAPE_VALUES        = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    RH2_VALUES          = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    RH300_VALUES        = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    RH500_VALUES        = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    RH700_VALUES        = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    RH850_VALUES        = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    RH950_VALUES        = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    SLP_VALUES          = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    T2C_VALUES          = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    TC500_VALUES        = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    TC850_VALUES        = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    U10M_VALUES         = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    U300_VALUES         = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    U500_VALUES         = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    U700_VALUES         = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    U850_VALUES         = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    U950_VALUES         = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    WDIR10_VALUES       = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-    WSPD10_VALUES       = np.full([len(scan_lat),len(scan_lon)],-999,dtype=np.float32)
-
-    MODEL_CLDFRA_TOTAL = model['CLDFRA_TOTAL'][::]
-    MODEL_DAILY_RAIN = model['DAILY_RAIN'][::]
-    MODEL_DELTA_RAIN = model['DELTA_RAIN'][::]
-    MODEL_DELTA_WDIR10 = model['DELTA_WDIR10'][::]
-    MODEL_DELTA_WSPD10 = model['DELTA_WSPD10'][::]
-    MODEL_GPH500 = model['GPH500'][::]
-    MODEL_GPH850 = model['GPH850'][::]
-    MODEL_HOURLY_SWE = model['HOURLY_SWE'][::]
-    MODEL_MCAPE =model['MCAPE'][::]
-    MODEL_RH2 = model['RH2'][::]
-    MODEL_RH300 = model['RH300'][::]
-    MODEL_RH500 = model['RH500'][::]
-    MODEL_RH700 = model['RH700'][::]
-    MODEL_RH850 = model['RH850'][::]
-    MODEL_RH950 = model['RH950'][::]
-    MODEL_SLP = model['SLP'][::]
-    MODEL_T2C = model['T2C'][::]
-    MODEL_TC500 = model['TC500'][::]
-    MODEL_TC850 = model['TC850'][::]
-    MODEL_U10M = model['U10M'][::]
-    MODEL_U300 = model['U300'][::]
-    MODEL_U500 = model['U500'][::]
-    MODEL_U700 = model['U700'][::]
-    MODEL_U850 = model['U850'][::]
-    MODEL_U950 = model['U950'][::]
-    MODEL_WDIR10 = model['WDIR10'][::]
-    MODEL_WSPD10 = model['WSPD10'][::]
-
-    for i in range(len(scan_lat)):
-        for j in range(len(scan_lon)):
-
-            _lat = scan_lat[i]
-            _lon = scan_lon[j]
-
-
-            if _lat > model_lat[len(model_lat)-1] or _lat < model_lat[0]:
-                continue
-            
-            if _lon < model_lon[0] or _lon > model_lon[len(model_lon)-1]:
-                continue
-            
-            if radar_scan['reflectivity'][i,j] == -999 :
-                continue
-
-            opt_i = (np.abs(model_lat-_lat)).argmin()
-            opt_j = (np.abs(model_lon-_lon)).argmin()
-
-            CLDFRA_TOTAL_VALUES[i,j] = MODEL_CLDFRA_TOTAL[0,opt_i,opt_j]
-            DAILY_RAIN_VALUES[i,j] = MODEL_DAILY_RAIN[0,opt_i,opt_j]
-            DELTA_RAIN_VALUES[i,j] = MODEL_DELTA_RAIN[0,opt_i,opt_j]
-            DELTA_WDIR10_VALUES[i,j] = MODEL_DELTA_WDIR10[0,opt_i,opt_j]
-            DELTA_WSPD10_VALUES[i,j] = MODEL_DELTA_WSPD10[0,opt_i,opt_j]
-            GPH500_VALUES[i,j] = MODEL_GPH500[0,opt_i,opt_j]
-            GPH850_VALUES[i,j] = MODEL_GPH850[0,opt_i,opt_j]
-            HOURLY_SWE_VALUES[i,j] = MODEL_HOURLY_SWE[0,opt_i,opt_j]
-            MCAPE_VALUES[i,j] = MODEL_MCAPE[0,opt_i,opt_j]
-            RH2_VALUES[i,j] = MODEL_RH2[0,opt_i,opt_j]
-            RH300_VALUES[i,j] = MODEL_RH300[0,opt_i,opt_j]
-            RH500_VALUES[i,j] = MODEL_RH500[0,opt_i,opt_j]
-            RH700_VALUES[i,j] = MODEL_RH700[0,opt_i,opt_j]
-            RH850_VALUES[i,j] = MODEL_RH850[0,opt_i,opt_j]
-            RH950_VALUES[i,j] = MODEL_RH950[0,opt_i,opt_j]
-            SLP_VALUES[i,j] = MODEL_SLP[0,opt_i,opt_j]
-            T2C_VALUES[i,j] = MODEL_T2C[0,opt_i,opt_j]
-            TC500_VALUES[i,j] = MODEL_TC500[0,opt_i,opt_j]
-            TC850_VALUES[i,j] = MODEL_TC850[0,opt_i,opt_j]
-            U10M_VALUES[i,j] = MODEL_U10M[0,opt_i,opt_j]
-            U300_VALUES[i,j] = MODEL_U300[0,opt_i,opt_j]
-            U500_VALUES[i,j] = MODEL_U500[0,opt_i,opt_j]
-            U700_VALUES[i,j] = MODEL_U700[0,opt_i,opt_j]
-            U850_VALUES[i,j] = MODEL_U850[0,opt_i,opt_j]
-            U950_VALUES[i,j] = MODEL_U950[0,opt_i,opt_j]
-            WDIR10_VALUES[i,j] = MODEL_WDIR10[0,opt_i,opt_j]
-            WSPD10_VALUES[i,j] = MODEL_WSPD10[0,opt_i,opt_j]
-
-    aggregated_file = nc.Dataset(output, 'w', format='NETCDF4')
-    aggregated_file.createDimension('X' ,len(scan_lat))
-    aggregated_file.createDimension('Y', len(scan_lon))
-
-    lats = aggregated_file.createVariable('lat', 'f4', ('X','Y'))
-    lats.units = 'degree_north'
-    lats._CoordinateAxisType = 'Lat'
-
-    lons = aggregated_file.createVariable('lon', 'f4', ('X','Y'))
-    lons.units = 'degree_east'
-    lons._CoordinateAxisType = 'Lon'
-
-    CLDFRA_TOTAL = aggregated_file.createVariable('HGT', 'f4', ('X','Y'),fill_value=-999)
-    DAILY_RAIN = aggregated_file.createVariable('DAILY_RAIN', 'f4', ('X','Y'),fill_value=-999)
-    DELTA_RAIN = aggregated_file.createVariable('DELTA_RAIN', 'f4', ('X','Y'),fill_value=-999)
-    DELTA_WDIR10 = aggregated_file.createVariable('DELTA_WDIR10', 'f4', ('X','Y'),fill_value=-999)
-    DELTA_WSPD10 = aggregated_file.createVariable('DELTA_WSPD10', 'f4', ('X','Y'),fill_value=-999)
-    GPH500 = aggregated_file.createVariable('GPH500', 'f4', ('X','Y'),fill_value=-999)
-    GPH850 = aggregated_file.createVariable('GPH850', 'f4', ('X','Y'),fill_value=-999)
-    HOURLY_SWE = aggregated_file.createVariable('HOURLY_SWE', 'f4', ('X','Y'),fill_value=-999)
-    MCAPE = aggregated_file.createVariable('MCAPE', 'f4', ('X','Y'),fill_value=-999)
-    RH2 = aggregated_file.createVariable('RH2', 'f4', ('X','Y'),fill_value=-999)
-    RH300 = aggregated_file.createVariable('RH300', 'f4', ('X','Y'),fill_value=-999)
-    RH500 = aggregated_file.createVariable('RH500', 'f4', ('X','Y'),fill_value=-999)
-    RH700 = aggregated_file.createVariable('RH700', 'f4', ('X','Y'),fill_value=-999)
-    RH850 = aggregated_file.createVariable('RH850', 'f4', ('X','Y'),fill_value=-999)
-    RH950 = aggregated_file.createVariable('RH950', 'f4', ('X','Y'),fill_value=-999)
-    SLP = aggregated_file.createVariable('SLP', 'f4', ('X','Y'),fill_value=-999)
-    T2C = aggregated_file.createVariable('T2C', 'f4', ('X','Y'),fill_value=-999)
-    TC500 = aggregated_file.createVariable('TC500', 'f4', ('X','Y'),fill_value=-999)
-    TC850 = aggregated_file.createVariable('TC850', 'f4', ('X','Y'),fill_value=-999)
-    U10M = aggregated_file.createVariable('U10M', 'f4', ('X','Y'),fill_value=-999)
-    U300 = aggregated_file.createVariable('U300', 'f4', ('X','Y'),fill_value=-999)
-    U500 = aggregated_file.createVariable('U500', 'f4', ('X','Y'),fill_value=-999)
-    U700 = aggregated_file.createVariable('U700', 'f4', ('X','Y'),fill_value=-999)
-    U850 = aggregated_file.createVariable('U850', 'f4', ('X','Y'),fill_value=-999)
-    U950 = aggregated_file.createVariable('U950', 'f4', ('X','Y'),fill_value=-999)
-    WDIR10 = aggregated_file.createVariable('WDIR10', 'f4', ('X','Y'),fill_value=-999)
-    WSPD10 = aggregated_file.createVariable('WSPD10', 'f4', ('X','Y'),fill_value=-999)
-    RADAR_REFLECTIVITY = aggregated_file.createVariable('RADAR_REFLECTIVITY', 'f4', ('X','Y'),fill_value=-999)
-    RADAR_RAIN_RATE = aggregated_file.createVariable('RADAR_RAIN_RATE', 'f4', ('X','Y'),fill_value=-999)
-
-    lats[::] = radar_scan['lat'][::]
-    lons[::] = radar_scan['lon'][::]
-
-    CLDFRA_TOTAL[::] = CLDFRA_TOTAL_VALUES
-    DAILY_RAIN[::] = DAILY_RAIN_VALUES
-    DELTA_RAIN[::] = DELTA_RAIN_VALUES
-    DELTA_WDIR10[::] = DELTA_WDIR10_VALUES
-    DELTA_WSPD10[::] = DELTA_WSPD10_VALUES
-    GPH500[::] = GPH500_VALUES
-    GPH850[::] = GPH850_VALUES
-    HOURLY_SWE[::] = HOURLY_SWE_VALUES
-    MCAPE[::] = MCAPE_VALUES
-    RH2[::] = RH2_VALUES
-    RH300[::] = RH300_VALUES
-    RH500[::] = RH500_VALUES
-    RH700[::] = RH700_VALUES
-    RH850[::] = RH850_VALUES
-    RH950[::] = RH950_VALUES
-    T2C[::] = T2C_VALUES
-    TC500[::] = TC500_VALUES
-    TC850[::] = TC850_VALUES
-    U10M[::] = U10M_VALUES
-    U300[::] = U300_VALUES
-    U500[::] = U500_VALUES
-    U700[::] = U700_VALUES
-    U850[::] = U850_VALUES
-    U950[::] = U950_VALUES
-    WDIR10[::] = WDIR10_VALUES
-    WSPD10[::] = WSPD10_VALUES
-
-    RADAR_REFLECTIVITY[::] = radar_scan['reflectivity'][::]
-    RADAR_RAIN_RATE[::] = radar_scan['rain_rate'][::]
 
 if __name__ == '__main__':
+    if len(sys.argv) < 3:
+        print(f'usage: {sys.argv[0]} <input directory> <output directory>')
+        exit(-1)
 
-    input_dir = 'STACKED'
-    output_dir = 'NETCDF4_DATASET'
+    input_dir = sys.argv[1]
+    output_dir = sys.argv[2]
 
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
 
-    days = os.listdir(input_dir)
+    hours = os.listdir(input_dir)
 
-    #test_wrf = 'http://193.205.230.6:8080/opendap/opendap/wrf5/d03/archive/2020/06/01/wrf5_d03_20200601Z0000.nc'
-    #test_scan = 'STACKED/01/NA_AV_2020-06-01 00.nc'
-    #scan = 'NA_AV_2020-06-01 00.nc'
-    #model,radar_scan = read_netcdf4_files(test_wrf,test_scan)
-    #regridding(model,radar_scan,os.path.join(output_dir,scan))
-        
-    for dd in days:
-       scans = os.listdir(os.path.join(input_dir,dd))
-       if scans:
-            yyyy = scans[0][6:10]
-            mm = scans[0][11:13]
-            for scan in scans:
-                hh = scan[17:19]
-                wrf_url_nc = build_url(yyyy,mm,dd,hh)
-                scan_path = os.path.join(input_dir,dd,scan)
-                print(f'Getting data for {scan}...',end='')
-                model,radar_scan = read_netcdf4_files(wrf_url_nc,scan_path)
-                regridding(model,radar_scan,os.path.join(output_dir,scan))
-                print('OK')
+    for hour in hours:
+        scan_path = os.path.join(input_dir, hour)
+        print(scan_path)
+        radar_scan = nc.Dataset(scan_path, 'r')
 
-    
+        scan_lat = radar_scan['lat'][:, 0]
+        scan_lon = radar_scan['lon'][0]
 
+        yyyy = hour[3:7]
+        mm = hour[8:10]
+        dd = hour[11:13]
+        hh = hour[14:16]
+        wrf = f'http://193.205.230.6:8080/opendap/opendap/wrf5/d03/archive/{yyyy}/{mm}/{dd}/wrf5_d03_{yyyy}{mm}{dd}Z{hh}00.nc'
+        model = nc.Dataset(wrf)
+        model_lat = model['latitude'][:]
+        model_lon = model['longitude'][:]
+        time = model["time"][:]
 
+        wrfPolygon = Polygon(zip([model_lat[0], model_lat[-1], model_lat[-1], model_lat[0], model_lat[0]],
+                                 [model_lon[0], model_lon[0], model_lon[-1], model_lon[-1], model_lon[0]]))
 
+        radarPolygon = Polygon(zip([scan_lat[0], scan_lat[-1], scan_lat[-1], scan_lat[0], scan_lat[0]],
+                                   [scan_lon[0], scan_lon[0], scan_lon[-1], scan_lon[-1], scan_lon[0]]))
 
+        intersection = wrfPolygon.intersection(radarPolygon).exterior.coords.xy
 
+        min_lat = intersection[0][1]
+        max_lat = intersection[0][0]
+        min_lon = intersection[1][0]
+        max_lon = intersection[1][2]
 
+        grid_lat = np.linspace(scan_lat[(np.abs(scan_lat - min_lat)).argmin()],
+                               scan_lat[(np.abs(scan_lat - max_lat)).argmin()],
+                               (np.abs(scan_lat - max_lat)).argmin() - (np.abs(scan_lat - min_lat)).argmin())
+        grid_lon = np.linspace(scan_lon[(np.abs(scan_lon - min_lon)).argmin()],
+                               scan_lon[(np.abs(scan_lon - max_lon)).argmin()],
+                               (np.abs(scan_lon - max_lon)).argmin() - (np.abs(scan_lon - min_lon)).argmin())
+        X, Y = np.meshgrid(grid_lon, grid_lat)
+
+        model_lat = model_lat[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin()]
+        model_lon = model_lon[(np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin()]
+
+        # REFLECTIVITY
+        reflectivity = radar_scan['reflectivity'][::]
+        reflectivity = reflectivity[(np.abs(scan_lat - min_lat)).argmin():(np.abs(scan_lat - max_lat)).argmin(),
+                       (np.abs(scan_lon - min_lon)).argmin():(np.abs(scan_lon - max_lon)).argmin()]
+        # RAIN RATE
+        rainRate = radar_scan['rain_rate'][::]
+        rainRate = rainRate[(np.abs(scan_lat - min_lat)).argmin():(np.abs(scan_lat - max_lat)).argmin(),
+                   (np.abs(scan_lon - min_lon)).argmin():(np.abs(scan_lon - max_lon)).argmin()]
+        # T2C
+        T2C = getvar(model, "T2C", meta=False)
+        T2C = T2C[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+              (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # RH2
+        RH2 = getvar(model, "RH2", meta=False)
+        RH2 = RH2[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+              (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # U1000
+        U1000 = getvar(model, "U1000", meta=False)
+        U1000 = U1000[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+                (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # V1000
+        V1000 = getvar(model, "V1000", meta=False)
+        V1000 = V1000[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+                (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # TC1000
+        TC1000 = getvar(model, "TC1000", meta=False)
+        TC1000 = TC1000[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+                 (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # RH1000
+        RH1000 = getvar(model, "RH1000", meta=False)
+        RH1000 = RH1000[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+                 (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # U975
+        U975 = getvar(model, "U975", meta=False)
+        U975 = U975[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+               (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # V975
+        V975 = getvar(model, "V975", meta=False)
+        V975 = V975[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+               (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # TC975
+        TC975 = getvar(model, "TC975", meta=False)
+        TC975 = TC975[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+                (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # RH975
+        RH975 = getvar(model, "RH975", meta=False)
+        RH975 = RH975[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+                (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # U950
+        U950 = getvar(model, "U950", meta=False)
+        U950 = U950[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+               (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # V950
+        V950 = getvar(model, "V950", meta=False)
+        V950 = V950[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+               (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # TC950
+        TC950 = getvar(model, "TC950", meta=False)
+        TC950 = TC950[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+                (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # RH950
+        RH950 = getvar(model, "RH950", meta=False)
+        RH950 = RH950[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+                (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # U925
+        U925 = getvar(model, "U925", meta=False)
+        U925 = U925[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+               (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # V925
+        V925 = getvar(model, "V925", meta=False)
+        V925 = V925[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+               (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # TC925
+        TC925 = getvar(model, "TC925", meta=False)
+        TC925 = TC925[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+                (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # RH925
+        RH925 = getvar(model, "RH925", meta=False)
+        RH925 = RH925[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+                (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # U850
+        U850 = getvar(model, "U850", meta=False)
+        U850 = U850[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+               (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # V850
+        V850 = getvar(model, "V850", meta=False)
+        V850 = V850[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+               (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # TC850
+        TC850 = getvar(model, "TC850", meta=False)
+        TC850 = TC850[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+                (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # RH850
+        RH850 = getvar(model, "RH850", meta=False)
+        RH850 = RH850[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+                (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # U700
+        U700 = getvar(model, "U700", meta=False)
+        U700 = U700[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+               (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # V700
+        V700 = getvar(model, "V700", meta=False)
+        V700 = V700[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+               (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # TC700
+        TC700 = getvar(model, "TC700", meta=False)
+        TC700 = TC700[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+                (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # RH700
+        RH700 = getvar(model, "RH700", meta=False)
+        RH700 = RH700[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+                (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # U500
+        U500 = getvar(model, "U500", meta=False)
+        U500 = U500[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+               (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # V500
+        V500 = getvar(model, "V500", meta=False)
+        V500 = V500[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+               (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # TC500
+        TC500 = getvar(model, "TC500", meta=False)
+        TC500 = TC500[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+                (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # RH500
+        RH500 = getvar(model, "RH500", meta=False)
+        RH500 = RH500[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+                (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # U300
+        U300 = getvar(model, "U300", meta=False)
+        U300 = U300[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+               (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # V300
+        V300 = getvar(model, "V300", meta=False)
+        V300 = V300[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+               (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # TC300
+        TC300 = getvar(model, "TC300", meta=False)
+        TC300 = TC300[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+                (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # RH300
+        RH300 = getvar(model, "RH300", meta=False)
+        RH300 = RH300[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+                (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # U10M
+        U10M = getvar(model, "U10M", meta=False)
+        U10M = U10M[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+               (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # V10M
+        V10M = getvar(model, "V10M", meta=False)
+        V10M = V10M[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+               (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+        # SLP
+        SLP = getvar(model, "SLP", meta=False)
+        SLP = SLP[(np.abs(model_lat - min_lat)).argmin():(np.abs(model_lat - max_lat)).argmin() + 1,
+              (np.abs(model_lon - min_lon)).argmin():(np.abs(model_lon - max_lon)).argmin() + 1]
+
+        X_wrf5, Y_wrf5 = np.meshgrid(model_lon, model_lat)
+
+        T2C = interp(X_wrf5, Y_wrf5, T2C, grid_lon, grid_lat, 1.e+37)
+        RH2 = interp(X_wrf5, Y_wrf5, RH2, grid_lon, grid_lat, 1.e+37)
+        SLP = interp(X_wrf5, Y_wrf5, SLP, grid_lon, grid_lat, 1.e+37)
+
+        U10M = interp(X_wrf5, Y_wrf5, U10M, grid_lon, grid_lat, 1.e+37)
+        V10M = interp(X_wrf5, Y_wrf5, V10M, grid_lon, grid_lat, 1.e+37)
+
+        U1000 = interp(X_wrf5, Y_wrf5, U1000, grid_lon, grid_lat, 1.e+37)
+        V1000 = interp(X_wrf5, Y_wrf5, V1000, grid_lon, grid_lat, 1.e+37)
+        TC1000 = interp(X_wrf5, Y_wrf5, TC1000, grid_lon, grid_lat, 1.e+37)
+        RH1000 = interp(X_wrf5, Y_wrf5, RH1000, grid_lon, grid_lat, 1.e+37)
+
+        U975 = interp(X_wrf5, Y_wrf5, U975, grid_lon, grid_lat, 1.e+37)
+        V975 = interp(X_wrf5, Y_wrf5, V975, grid_lon, grid_lat, 1.e+37)
+        TC975 = interp(X_wrf5, Y_wrf5, TC975, grid_lon, grid_lat, 1.e+37)
+        RH975 = interp(X_wrf5, Y_wrf5, RH975, grid_lon, grid_lat, 1.e+37)
+
+        U950 = interp(X_wrf5, Y_wrf5, U950, grid_lon, grid_lat, 1.e+37)
+        V950 = interp(X_wrf5, Y_wrf5, V950, grid_lon, grid_lat, 1.e+37)
+        TC950 = interp(X_wrf5, Y_wrf5, TC950, grid_lon, grid_lat, 1.e+37)
+        RH950 = interp(X_wrf5, Y_wrf5, RH950, grid_lon, grid_lat, 1.e+37)
+
+        U925 = interp(X_wrf5, Y_wrf5, U925, grid_lon, grid_lat, 1.e+37)
+        V925 = interp(X_wrf5, Y_wrf5, V925, grid_lon, grid_lat, 1.e+37)
+        TC925 = interp(X_wrf5, Y_wrf5, TC925, grid_lon, grid_lat, 1.e+37)
+        RH925 = interp(X_wrf5, Y_wrf5, RH925, grid_lon, grid_lat, 1.e+37)
+
+        U850 = interp(X_wrf5, Y_wrf5, U850, grid_lon, grid_lat, 1.e+37)
+        V850 = interp(X_wrf5, Y_wrf5, V850, grid_lon, grid_lat, 1.e+37)
+        TC850 = interp(X_wrf5, Y_wrf5, TC850, grid_lon, grid_lat, 1.e+37)
+        RH850 = interp(X_wrf5, Y_wrf5, RH850, grid_lon, grid_lat, 1.e+37)
+
+        U700 = interp(X_wrf5, Y_wrf5, U700, grid_lon, grid_lat, 1.e+37)
+        V700 = interp(X_wrf5, Y_wrf5, V700, grid_lon, grid_lat, 1.e+37)
+        TC700 = interp(X_wrf5, Y_wrf5, TC700, grid_lon, grid_lat, 1.e+37)
+        RH700 = interp(X_wrf5, Y_wrf5, RH700, grid_lon, grid_lat, 1.e+37)
+
+        U500 = interp(X_wrf5, Y_wrf5, U500, grid_lon, grid_lat, 1.e+37)
+        V500 = interp(X_wrf5, Y_wrf5, V500, grid_lon, grid_lat, 1.e+37)
+        TC500 = interp(X_wrf5, Y_wrf5, TC500, grid_lon, grid_lat, 1.e+37)
+        RH500 = interp(X_wrf5, Y_wrf5, RH500, grid_lon, grid_lat, 1.e+37)
+
+        U300 = interp(X_wrf5, Y_wrf5, U300, grid_lon, grid_lat, 1.e+37)
+        V300 = interp(X_wrf5, Y_wrf5, V300, grid_lon, grid_lat, 1.e+37)
+        TC300 = interp(X_wrf5, Y_wrf5, TC300, grid_lon, grid_lat, 1.e+37)
+        RH300 = interp(X_wrf5, Y_wrf5, RH300, grid_lon, grid_lat, 1.e+37)
+
+        # SAVE NETCDF TODO: Create function
+        outputFile = os.path.join(output_dir, hour)
+        ncdstfile = nc.Dataset(outputFile, "w", format="NETCDF4")
+        ncdstfile.createDimension("time", size=1)
+        ncdstfile.createDimension("latitude", size=len(grid_lat))
+        ncdstfile.createDimension("longitude", size=len(grid_lon))
+
+        timeVar = ncdstfile.createVariable("time", "f4", "time")
+        timeVar.description = "Time since initialization"
+        timeVar.field = "time, scalar, series"
+        timeVar.long_name = "julian day (UT)"
+        timeVar.standard_name = "time"
+        timeVar.calendar = "standard"
+        timeVar.units = "days since 1990-01-01 00:00:00"
+        timeVar.conventions = "relative julian days with decimal part (as parts of the day )"
+        timeVar.axis = "T"
+
+        lonVar = ncdstfile.createVariable("longitude", "f4", "longitude")
+        lonVar.description = "Longitude"
+        lonVar.long_name = "longitude"
+        lonVar.units = "degrees_east"
+
+        latVar = ncdstfile.createVariable("latitude", "f4", "latitude")
+        latVar.description = "Latitude"
+        latVar.long_name = "latitude"
+        latVar.units = "degrees_north"
+
+        T2CVar = ncdstfile.createVariable("T2C", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        T2CVar.description = "Temperature at 2m in Celsius"
+        T2CVar.units = "C"
+
+        RH2Var = ncdstfile.createVariable("RH2", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        RH2Var.description = "Relative humidity at 2 meters"
+        RH2Var.units = "%"
+
+        SLPVar = ncdstfile.createVariable("SLP", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        SLPVar.description = "Sea level pressure"
+        SLPVar.units = "HPa"
+
+        U10MVar = ncdstfile.createVariable("U10M", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        U10MVar.description = "grid rel. x-wind component"
+        U10MVar.units = "m s-1"
+
+        V10MVar = ncdstfile.createVariable("V10M", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        V10MVar.description = "grid rel. x-wind component"
+        V10MVar.units = "m s-1"
+
+        U1000Var = ncdstfile.createVariable("U1000", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        U1000Var.description = "grid rel. x-wind component at 1000 HPa"
+        U1000Var.units = "m s-1"
+
+        V1000Var = ncdstfile.createVariable("V1000", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        V1000Var.description = "grid rel. y-wind component at 1000 HPa"
+        V1000Var.units = "m s-1"
+
+        TC1000Var = ncdstfile.createVariable("TC1000", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        TC1000Var.description = "Temperature at 1000 HPa"
+        TC1000Var.units = "C"
+
+        RH1000Var = ncdstfile.createVariable("RH1000", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        RH1000Var.description = "Relative humidity at 1000 HPa"
+        RH1000Var.units = "%"
+
+        U975Var = ncdstfile.createVariable("U975", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        U975Var.description = "grid rel. x-wind component at 975 HPa"
+        U975Var.units = "m s-1"
+
+        V975Var = ncdstfile.createVariable("V975", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        V975Var.description = "grid rel. y-wind component at 975 HPa"
+        V975Var.units = "m s-1"
+
+        TC975Var = ncdstfile.createVariable("TC975", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        TC975Var.description = "Temperature at 975 HPa"
+        TC975Var.units = "C"
+
+        RH975Var = ncdstfile.createVariable("RH975", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        RH975Var.description = "Relative humidity at 975 HPa"
+        RH975Var.units = "%"
+
+        U950Var = ncdstfile.createVariable("U950", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        U950Var.description = "grid rel. x-wind component at 950 HPa"
+        U950Var.units = "m s-1"
+
+        V950Var = ncdstfile.createVariable("V950", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        V950Var.description = "grid rel. y-wind component at 950 HPa"
+        V950Var.units = "m s-1"
+
+        TC950Var = ncdstfile.createVariable("TC950", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        TC950Var.description = "Temperature at 950 HPa"
+        TC950Var.units = "C"
+
+        RH950Var = ncdstfile.createVariable("RH950", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        RH950Var.description = "Relative humidity at 950 HPa"
+        RH950Var.units = "%"
+
+        U925Var = ncdstfile.createVariable("U925", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        U925Var.description = "grid rel. x-wind component at 925 HPa"
+        U925Var.units = "m s-1"
+
+        V925Var = ncdstfile.createVariable("V925", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        V925Var.description = "grid rel. y-wind component at 925 HPa"
+        V925Var.units = "m s-1"
+
+        TC925Var = ncdstfile.createVariable("TC925", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        TC925Var.description = "Temperature at 925 HPa"
+        TC925Var.units = "C"
+
+        RH925Var = ncdstfile.createVariable("RH925", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        RH925Var.description = "Relative humidity at 925 HPa"
+        RH925Var.units = "%"
+
+        U850Var = ncdstfile.createVariable("U850", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        U850Var.description = "grid rel. x-wind component at 850 HPa"
+        U850Var.units = "m s-1"
+
+        V850Var = ncdstfile.createVariable("V850", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        V850Var.description = "grid rel. y-wind component at 850 HPa"
+        V850Var.units = "m s-1"
+
+        TC850Var = ncdstfile.createVariable("TC850", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        TC850Var.description = "Temperature at 850 HPa"
+        TC850Var.units = "C"
+
+        RH850Var = ncdstfile.createVariable("RH850", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        RH850Var.description = "Relative humidity at 850 HPa"
+        RH850Var.units = "%"
+
+        U700Var = ncdstfile.createVariable("U700", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        U700Var.description = "grid rel. x-wind component at 700 HPa"
+        U700Var.units = "m s-1"
+
+        V700Var = ncdstfile.createVariable("V700", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        V700Var.description = "grid rel. y-wind component at 700 HPa"
+        V700Var.units = "m s-1"
+
+        TC700Var = ncdstfile.createVariable("TC700", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        TC700Var.description = "Temperature at 700 HPa"
+        TC700Var.units = "C"
+
+        RH700Var = ncdstfile.createVariable("RH700", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        RH700Var.description = "Relative humidity at 700 HPa"
+        RH700Var.units = "%"
+
+        U500Var = ncdstfile.createVariable("U500", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        U500Var.description = "grid rel. x-wind component at 500 HPa"
+        U500Var.units = "m s-1"
+
+        V500Var = ncdstfile.createVariable("V500", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        V500Var.description = "grid rel. y-wind component at 500 HPa"
+        V500Var.units = "m s-1"
+
+        TC500Var = ncdstfile.createVariable("TC500", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        TC500Var.description = "Temperature at 500 HPa"
+        TC500Var.units = "C"
+
+        RH500Var = ncdstfile.createVariable("RH500", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        RH500Var.description = "Relative humidity at 500 HPa"
+        RH500Var.units = "%"
+
+        U300Var = ncdstfile.createVariable("U300", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        U300Var.description = "grid rel. x-wind component at 300 HPa"
+        U300Var.units = "m s-1"
+
+        V300Var = ncdstfile.createVariable("V300", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        V300Var.description = "grid rel. y-wind component at 300 HPa"
+        V300Var.units = "m s-1"
+
+        TC300Var = ncdstfile.createVariable("TC300", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        TC300Var.description = "Temperature at 300 HPa"
+        TC300Var.units = "C"
+
+        RH300Var = ncdstfile.createVariable("RH300", "f4", ("time", "latitude", "longitude"), fill_value=1.e+37)
+        RH300Var.description = "Relative humidity at 300 HPa"
+        RH300Var.units = "%"
+
+        reflectivityVar = ncdstfile.createVariable("reflectivity", "f4", ("time", "latitude", "longitude"), fill_value=-99)
+        rainRateVar = ncdstfile.createVariable("rainRate", "f4", ("time", "latitude", "longitude"), fill_value=-99)
+
+        timeVar[:] = time
+        lonVar[:] = grid_lon
+        latVar[:] = grid_lat
+        T2CVar[:] = T2C
+        RH2Var[:] = RH2
+        SLPVar[:] = SLP
+        U10MVar[:] = U10M
+        V10MVar[:] = V10M
+        U1000Var[:] = U1000
+        V1000Var[:] = V1000
+        TC1000Var[:] = TC1000
+        RH1000Var[:] = RH1000
+        U975Var[:] = U975
+        V975Var[:] = V975
+        TC975Var[:] = TC975
+        RH975Var[:] = RH975
+        U950Var[:] = U950
+        V950Var[:] = V950
+        TC950Var[:] = TC950
+        RH950Var[:] = RH950
+        U925Var[:] = U925
+        V925Var[:] = V925
+        TC925Var[:] = TC925
+        RH925Var[:] = RH925
+        U850Var[:] = U850
+        V850Var[:] = V850
+        TC850Var[:] = TC850
+        RH850Var[:] = RH850
+        U700Var[:] = U700
+        V700Var[:] = V700
+        TC700Var[:] = TC700
+        RH700Var[:] = RH700
+        U500Var[:] = U500
+        V500Var[:] = V500
+        TC500Var[:] = TC500
+        RH500Var[:] = RH500
+        U300Var[:] = U300
+        V300Var[:] = V300
+        TC300Var[:] = TC300
+        RH300Var[:] = RH300
+        reflectivityVar[:] = reflectivity
+        rainRateVar[:] = rainRate
+
+        ncdstfile.close()

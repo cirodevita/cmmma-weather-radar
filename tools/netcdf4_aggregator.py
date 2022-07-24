@@ -5,7 +5,6 @@ import netCDF4 as nc
 
 
 def aggregate(path, output_path=''):
-
     files = os.listdir(path)
     times = []
     for f in files:
@@ -22,30 +21,30 @@ def aggregate(path, output_path=''):
         lat = nf['lat'][::]
         lon = nf['lon'][::]
 
-        aggregated_file = nc.Dataset(os.path.join(output_path, t_files[0][0:16])+'.nc', 'w', format='NETCDF4')
-        aggregated_file.createDimension('X' ,len(lat))
+        aggregated_file = nc.Dataset(os.path.join(output_path, t_files[0][0:16]) + '.nc', 'w', format='NETCDF4')
+        aggregated_file.createDimension('X', len(lat))
         aggregated_file.createDimension('Y', len(lon[0]))
 
-        lats = aggregated_file.createVariable('lat', 'f4', ('X','Y'))
+        lats = aggregated_file.createVariable('lat', 'f4', ('X', 'Y'))
         lats.units = 'degree_north'
         lats._CoordinateAxisType = 'Lat'
 
-        lons = aggregated_file.createVariable('lon', 'f4', ('X','Y'))
+        lons = aggregated_file.createVariable('lon', 'f4', ('X', 'Y'))
         lons.units = 'degree_east'
         lons._CoordinateAxisType = 'Lon'
 
-        reflectivity = aggregated_file.createVariable('reflectivity', 'i', ('X','Y'),fill_value=-99.0)
-        rain_rate    = aggregated_file.createVariable('rain_rate','i',('X','Y'),fill_value=-99.0)
+        reflectivity = aggregated_file.createVariable('reflectivity', 'i', ('X', 'Y'), fill_value=-99.0)
+        rain_rate = aggregated_file.createVariable('rain_rate', 'i', ('X', 'Y'), fill_value=-99.0)
         # poh_rate    = aggregated_file.createVariable('poh','i',('X','Y'),fill_value=-999)
 
         lats[::] = lat
         lons[::] = lon
 
         vmi = []
-        rr  = []
+        rr = []
         poh = []
         for f in t_files:
-            nf = nc.Dataset(os.path.join(path,f), 'r', format='NETCDF4')
+            nf = nc.Dataset(os.path.join(path, f), 'r', format='NETCDF4')
             vmi.append(nf['reflectivity'][::])
             rr.append(nf['rain_rate'][::])
             # poh.append(nf['poh'][::])
@@ -59,7 +58,7 @@ def aggregate(path, output_path=''):
             for j in range(len(mean_vmi[0])):
 
                 for d in vmi:
-                    if d[i,j] != -99.0:
+                    if d[i, j] != -99.0:
                         if mean_vmi[i, j] == -99.0:
                             mean_vmi[i, j] = d[i, j]
                         else:
@@ -114,4 +113,3 @@ if __name__ == '__main__':
         os.mkdir(output_dir)
 
     aggregate(input_dir, output_dir)
-    

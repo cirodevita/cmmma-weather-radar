@@ -1,15 +1,23 @@
 import pandas as pd
 import glob
+import sys
+import os
 
-path = r'CSV' # use your path
-all_files = glob.glob(path + "/*.csv")
 
-li = []
+if __name__ == '__main__':
+    if len(sys.argv) < 3:
+        print(f'usage: {sys.argv[0]} <input directory> <output directory>')
+        exit(-1)
 
-for filename in all_files:
-    df = pd.read_csv(filename, index_col=None, header=0)
-    li.append(df)
+    input_dir = sys.argv[1]
+    output_dir = sys.argv[2]
 
-frame = pd.concat(li, axis=0, ignore_index=True)
+    li = []
 
-frame.to_csv('dataset.csv')
+    for filename in glob.glob(input_dir + "/*.csv"):
+        df = pd.read_csv(filename, index_col=None, header=0)
+        li.append(df)
+
+    frame = pd.concat(li, axis=0, ignore_index=True)
+
+    frame.to_csv(os.path.join(output_dir, 'dataset.csv'))
